@@ -3070,17 +3070,27 @@ function saveForm(){
     else if(f[0]==="customIcons") obj[f[0]]=el.value.split(",").map(s=>s.trim()).filter(Boolean).map(s=>{ const i=s.indexOf("|"); return i<0?{glyph:s.trim(),label:""}:{glyph:s.slice(0,i).trim(),label:s.slice(i+1).trim()}; });
     else obj[f[0]]=el.value;
   });
-  const list=db(store,[]);
-  if(id){ const i=list.findIndex(r=>r.id===id); if(i>=0){ const cu=collectCustom(store,list[i].custom); if(cu!==undefined)obj.custom=cu; list[i]=Object.assign(list[i],obj,{updated:nowISO()}); } }
+  const list=db(store,[]); let prevRec=null;
+  if(id){ const i=list.findIndex(r=>r.id===id); if(i>=0){ prevRec=Object.assign({},list[i]); const cu=collectCustom(store,list[i].custom); if(cu!==undefined)obj.custom=cu; list[i]=Object.assign(list[i],obj,{updated:nowISO()}); } }
   else { const cu=collectCustom(store,{}); if(cu!==undefined)obj.custom=cu; obj.id=uid(store==="properties"?"prop":store); obj.created=nowISO(); obj.updated=nowISO(); list.push(obj); }
-  save(store,list); if(store==="tasks"&&!id&&obj.assignee){ try{notifyTask("created",obj);}catch(e){} } logAct(id?"edit":"add",store,labelFor(store,obj)); closeModal(); toast("Saved."); renderPage(currentTab);
+  save(store,list);
+  try{ if(typeof NOTIFY_MAP!=="undefined" && NOTIFY_MAP[store]){ const saved=id?list.find(r=>r.id===id):obj; if(saved){
+    if(!id){ notifyRecord(store,"created",saved); }
+    else { const af=NOTIFY_MAP[store].assignee||NOTIFY_MAP[store].owner;
+      const reassigned=af&&prevRec&&saved[af]&&saved[af]!==prevRec[af];
+      const statusChanged=prevRec&&saved.status&&saved.status!==prevRec.status;
+      if(reassigned) notifyRecord(store,"assigned",saved,{to:saved[af]});
+      if(statusChanged) notifyRecord(store,"status",saved,{to:saved.status});
+      if(!reassigned&&!statusChanged) notifyRecord(store,"updated",saved);
+    } } } }catch(e){}
+  logAct(id?"edit":"add",store,labelFor(store,obj)); closeModal(); toast("Saved."); renderPage(currentTab);
 }
 function delRow(store,id,fromForm){
   if(!requireEdit(store))return;
   openModal("Delete","<p>Delete this "+esc((COLLECTIONS[store]||{}).singular||"item")+"? You can undo this from the Recent activity panel.</p>",
     '<button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="doDel(\''+store+'\',\''+id+'\')">Delete</button>');
 }
-function doDel(store,id){ const rec=db(store,[]).find(r=>r.id===id); const label=labelFor(store,rec); if(rec) save("lastDeleted",{store,record:rec,label,at:nowISO()}); save(store, db(store,[]).filter(r=>r.id!==id)); if(store==="tasks"&&rec){ try{notifyTask("deleted",rec);}catch(e){} } logAct("delete",store,label); closeModal(); toast("Deleted. Undo from Recent activity."); renderPage(currentTab); }
+function doDel(store,id){ const rec=db(store,[]).find(r=>r.id===id); const label=labelFor(store,rec); if(rec) save("lastDeleted",{store,record:rec,label,at:nowISO()}); save(store, db(store,[]).filter(r=>r.id!==id)); if(rec){ if(store==="tasks"){ try{notifyTask("deleted",rec);}catch(e){} } else if(typeof NOTIFY_MAP!=="undefined"&&NOTIFY_MAP[store]){ try{notifyRecord(store,"deleted",rec);}catch(e){} } } logAct("delete",store,label); closeModal(); toast("Deleted. Undo from Recent activity."); renderPage(currentTab); }
 
 /* ============================================================
    MONEY HELPER (AUD)
@@ -3588,7 +3598,7 @@ function claimSave(){
     framing:document.getElementById("cl_frame").value};
   if(id){ const c=list.find(x=>x.id===id); Object.assign(c,obj,{updated:nowISO()}); if(!c.incidentEdited) c.incidentDetails=genIncident(c); }
   else { const c=Object.assign({id:uid("claim"),status:"draft",currency:"AUD",items:[],hasDamagePhotos:false,hasGuestScreenshot:false,created:nowISO(),updated:nowISO()},obj); c.incidentDetails=genIncident(c); list.push(c); shieldState.open=c.id; }
-  save("shieldClaims",list); closeModal(); toast("Saved."); renderPage("shield");
+  save("shieldClaims",list); try{ const saved=id?list.find(x=>x.id===id):list.find(x=>x.id===shieldState.open); if(saved) notifyRecord("shieldClaims",id?"updated":"created",saved); }catch(e){} closeModal(); toast("Saved."); renderPage("shield");
 }
 function itemForm(claimId,itemId){
   itemCtx={claimId,itemId:itemId||null};
@@ -3631,13 +3641,13 @@ function claimIncidentSave(id){ const list=claims(); const c=list.find(x=>x.id==
 function claimSetStatus(id,status){
   const list=claims(); const c=list.find(x=>x.id===id); if(!c)return;
   c.status=status; if(status==="submitted"&&!c.submittedAt)c.submittedAt=nowISO(); if((status==="approved"||status==="diff_approved")&&!c.approvedAt)c.approvedAt=nowISO(); c.updated=nowISO();
-  save("shieldClaims",list); toast("Status set to "+claimStatusLabel(status)+"."); renderPage("shield");
+  save("shieldClaims",list); try{ notifyRecord("shieldClaims","status",c,{to:status}); }catch(e){} toast("Status set to "+claimStatusLabel(status)+"."); renderPage("shield");
 }
 function claimDel(id){
   openModal("Delete claim","<p>Delete this claim and its items? This cannot be undone.</p>",
     '<button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="claimDoDel(\''+id+'\')">Delete</button>');
 }
-function claimDoDel(id){ save("shieldClaims", claims().filter(c=>c.id!==id)); shieldState.open=null; closeModal(); toast("Claim deleted."); renderPage("shield"); }
+function claimDoDel(id){ const rec=claims().find(c=>c.id===id); save("shieldClaims", claims().filter(c=>c.id!==id)); try{ if(rec) notifyRecord("shieldClaims","deleted",rec); }catch(e){} shieldState.open=null; closeModal(); toast("Claim deleted."); renderPage("shield"); }
 function shieldDemo(){
   const p=props()[0];
   const list=claims();
@@ -4381,15 +4391,46 @@ function notifPush(to,text,meta){ if(!to)return; let me=currentUserName(); try{ 
   const list=db("notifications",[]); list.push(Object.assign({id:uid("ntf"),to:to,text:text,read:false,by:me,created:nowISO()},meta||{})); save("notifications",list); }
 function notifFor(u){ return db("notifications",[]).filter(n=>n.to===u); }
 function notifUnread(u){ return notifFor(u).filter(n=>!n.read).length; }
+const NOTIFY_TEAM=["Marlon","Isabell","Harold","Lynn","Eva"];
+const NOTIFY_MAP={
+  tasks:{label:"task",assignee:"assignee",collabs:"collaborators",goto:"tasks",idKey:"taskId"},
+  teamTasks:{label:"team task",assignee:"assignee",collabs:"collaborators",goto:"team"},
+  maintenance:{label:"maintenance job",leads:true,goto:"maint"},
+  servicing:{label:"servicing job",leads:true,goto:"serv"},
+  pipeline:{label:"acquisition item",owner:"owner",goto:"pipe"},
+  sops:{label:"SOP",owner:"owner",goto:"sops"},
+  shieldClaims:{label:"Shield claim",owner:"owner",leads:true,goto:"shield"}
+};
+function cap(s){ return s?String(s).charAt(0).toUpperCase()+String(s).slice(1):s; }
+function recTitle(store,rec){ return rec.title||rec.issue||rec.name||rec.guestName||rec.service||rec.step||rec.trade||(rec.reservationCode?"claim "+rec.reservationCode:"")||(rec.property?propName(rec.property):"")||(rec.listing?String(rec.listing):"")||"item"; }
+function recPeople(store,rec){ const m=NOTIFY_MAP[store]||{}; let out=[];
+  if(m.assignee && rec[m.assignee]){ const a=rec[m.assignee]; if(a==="Shared") out.push("Marlon","Isabell"); else out.push(a); }
+  if(m.collabs && Array.isArray(rec[m.collabs])) out=out.concat(rec[m.collabs]);
+  if(m.owner && rec[m.owner]){ const o=rec[m.owner]; if(o==="Shared") out.push("Marlon","Isabell"); else if(NOTIFY_TEAM.indexOf(o)>=0) out.push(o); else out.push("Marlon","Isabell"); }
+  if(!out.length && m.leads) out.push("Marlon","Isabell");
+  return out.filter((x,i)=>x&&typeof x==="string"&&out.indexOf(x)===i);
+}
+function notifyRecord(store,event,rec,extra){ const m=NOTIFY_MAP[store]; if(!m||!rec)return;
+  const title=recTitle(store,rec), label=m.label||store; const meta={}; if(m.idKey&&rec.id)meta[m.idKey]=rec.id; if(m.goto)meta.goto=m.goto;
+  if(event==="assigned"){ const to=extra&&extra.to; if(!to)return; if(to==="Shared"){ ["Marlon","Isabell"].forEach(p=>notifPush(p,cap(label)+" assigned to you: "+title,meta)); } else notifPush(to,cap(label)+" assigned to you: "+title,meta); return; }
+  let msg;
+  if(event==="created") msg="New "+label+" for you: "+title;
+  else if(event==="deleted") msg=cap(label)+" deleted: "+title;
+  else if(event==="status") msg=cap(label)+' "'+title+'" is now '+((extra&&extra.to)||rec.status||"updated");
+  else if(event==="updated" && extra && extra.field==="due") msg=cap(label)+" rescheduled to "+((extra.to)||"no date")+": "+title;
+  else if(event==="updated" && extra && extra.field==="priority") msg="Priority "+((extra.to)||"")+" on "+label+": "+title;
+  else msg=cap(label)+" updated: "+title;
+  let people=recPeople(store,rec); if(event==="status"&&people.indexOf("Isabell")<0) people=people.concat("Isabell"); people.forEach(p=>notifPush(p,msg,meta));
+}
 function notifInApp(event,t,extra){ if(!t)return;
-  if(event==="created" && t.assignee) notifPush(t.assignee,"New task assigned to you: "+t.title,{taskId:t.id});
-  else if(event==="updated" && extra && extra.field==="assignee" && extra.to) notifPush(extra.to,"Task assigned to you: "+t.title,{taskId:t.id});
-  else if(event==="status_changed" && t.assignee && extra && extra.to==="blocked") notifPush(t.assignee,"Task blocked: "+t.title,{taskId:t.id});
-  else if(event==="deleted" && t.assignee) notifPush(t.assignee,"Task deleted: "+t.title,{});
-  if(Array.isArray(t.collaborators) && (event==="created"||(event==="updated"&&extra&&extra.field==="assignee"))) t.collaborators.forEach(c=>notifPush(c,"You are a collaborator on: "+t.title,{taskId:t.id}));
+  if(event==="created") notifyRecord("tasks","created",t);
+  else if(event==="updated" && extra && extra.field==="assignee") notifyRecord("tasks","assigned",t,{to:extra.to});
+  else if(event==="updated") notifyRecord("tasks","updated",t,extra);
+  else if(event==="status_changed") notifyRecord("tasks","status",t,{to:extra&&extra.to});
+  else if(event==="deleted") notifyRecord("tasks","deleted",t);
 }
 function fmtWhen(iso){ if(!iso)return""; try{ return new Date(iso).toLocaleString("en-AU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}); }catch(e){ return String(iso).slice(0,16).replace("T"," "); } }
-function notifClickOpen(id){ const list=db("notifications",[]); const n=list.find(x=>x.id===id); if(n&&!n.read){ n.read=true; save("notifications",list); } if(n&&n.taskId){ const t=db("tasks",[]).find(x=>x.id===n.taskId); if(t){ updateNavBadges(); openTask(n.taskId); return; } } renderPage("notif"); updateNavBadges(); }
+function notifClickOpen(id){ const list=db("notifications",[]); const n=list.find(x=>x.id===id); if(n&&!n.read){ n.read=true; save("notifications",list); } if(n&&n.taskId){ const t=db("tasks",[]).find(x=>x.id===n.taskId); if(t){ updateNavBadges(); openTask(n.taskId); return; } } if(n&&n.goto){ updateNavBadges(); go(n.goto); return; } renderPage("notif"); updateNavBadges(); }
 function notifMarkRead(id){ const list=db("notifications",[]); const n=list.find(x=>x.id===id); if(n)n.read=true; save("notifications",list); renderPage("notif"); updateNavBadges(); }
 function notifMarkAll(){ const me=currentUserName(); const list=db("notifications",[]); list.forEach(n=>{ if(n.to===me)n.read=true; }); save("notifications",list); renderPage("notif"); updateNavBadges(); }
 function notifClearRead(){ const me=currentUserName(); save("notifications", db("notifications",[]).filter(n=>!(n.to===me&&n.read))); renderPage("notif"); updateNavBadges(); }
@@ -4398,10 +4439,10 @@ function viewNotif(){
   const list=notifFor(me).slice().sort((a,b)=>(b.created||"").localeCompare(a.created||""));
   const unread=list.filter(n=>!n.read).length;
   const rows=list.map(n=>'<div class="card" style="margin-bottom:8px'+(!n.read?';border-left:3px solid var(--dgreen)':'')+'"><div class="card-bd" style="padding:11px 13px;display:flex;gap:10px;align-items:center">'
-    +'<div class="grow" style="cursor:'+(n.taskId?"pointer":"default")+'" onclick="notifClickOpen(\''+n.id+'\')"><div'+(!n.read?' style="font-weight:600"':'')+'>'+esc(n.text)+'</div><div class="muted mono" style="font-size:10px">'+esc(fmtWhen(n.created))+(n.by?" · from "+esc(n.by):"")+(n.taskId?" · opens task":"")+'</div></div>'
+    +'<div class="grow" style="cursor:'+((n.taskId||n.goto)?"pointer":"default")+'" onclick="notifClickOpen(\''+n.id+'\')"><div'+(!n.read?' style="font-weight:600"':'')+'>'+esc(n.text)+'</div><div class="muted mono" style="font-size:10px">'+esc(fmtWhen(n.created))+(n.by?" · from "+esc(n.by):"")+((n.taskId||n.goto)?" · tap to open":"")+'</div></div>'
     +(!n.read?'<button class="btn ghost sm" onclick="notifMarkRead(\''+n.id+'\')">Mark read</button>':'<span class="chip">read</span>')
     +'</div></div>').join("");
-  return head("Overview","Notifications","Task assignments and changes land here for whoever is signed in. Assign a task to someone and they see it the next time they open the hub.")
+  return head("Overview","Notifications","Assignments and changes across the hub, tasks, maintenance, servicing, claims and more, land here for whoever is signed in. Contractor jobs route to you and Isabell.")
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px"><span class="chip '+(unread?"warn":"ok")+'">'+unread+' unread</span><span style="margin-left:auto"></span>'
       +(unread?'<button class="btn ghost sm" onclick="notifMarkAll()">Mark all read</button>':'')
       +'<button class="btn ghost sm" onclick="notifClearRead()">Clear read</button></div>'
