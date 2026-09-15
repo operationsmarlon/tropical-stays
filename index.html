@@ -1768,7 +1768,7 @@ function taskStatusSelect(id,cur,cls){ cur=cur||"open";
     +TASK_STATUS.map(([k,l])=>'<option value="'+k+'" '+(cur===k?"selected":"")+'>'+esc(l)+'</option>').join("")+'</select>';
 }
 function setTaskStatus(id,val){ const list=db("tasks",[]); const t=list.find(x=>x.id===id); if(!t)return; t.status=val; t.updated=nowISO(); save("tasks",list); notifyTask("status_changed",t,{to:val}); logAct("edit","tasks",t.title); if(taskDetailOpen!==id) renderPage(currentTab); }
-function taskSetField(id,field,val){ const list=db("tasks",[]); const t=list.find(x=>x.id===id); if(!t)return; t[field]=val; t.updated=nowISO(); save("tasks",list); if(field==="assignee"||field==="due"||field==="priority") notifyTask("updated",t,{field:field,to:val}); if(taskDetailOpen!==id) renderPage(currentTab); }
+function taskSetField(id,field,val){ const list=db("tasks",[]); const t=list.find(x=>x.id===id); if(!t)return; t[field]=val; t.updated=nowISO(); save("tasks",list); if(field==="assignee"||field==="due"||field==="priority") notifyTask("updated",t,{field:field,to:val}); if(field==="notes"||field==="title"){ try{notifyMentionsText(val,t);}catch(e){} } if(taskDetailOpen!==id) renderPage(currentTab); }
 
 let taskФ={status:"open",q:"",assignee:"",prop:"",prio:"",view:"list",group:"status",month:""};
 let taskDetailOpen=null, subDetailOpen=null, subCtx={taskId:null,subId:null}, draggedTask=null;
@@ -1916,7 +1916,7 @@ function openTask(id){
       +'<div class="tdrow"><div class="tdk">Due date</div><input class="inp" type="date" value="'+esc(t.due||"")+'" onchange="taskSetField(\''+id+'\',\'due\',this.value)"></div>'
     +'</div>'
     +(t.due?'<div style="margin-top:8px;display:flex;align-items:center;gap:8px"><span class="muted" style="font-size:11px">Add due date to calendar</span>'+calBtns("task",t.id)+'</div>':'')
-    +'<div class="field" style="margin-top:8px"><label>Notes</label><textarea class="inp" onchange="taskSetField(\''+id+'\',\'notes\',this.value)" placeholder="Notes">'+esc(t.notes||"")+'</textarea></div>'
+    +'<div class="field" style="margin-top:8px"><label>Notes</label><textarea class="inp" onchange="taskSetField(\''+id+'\',\'notes\',this.value)" placeholder="Notes — type @harold to notify a teammate">'+esc(t.notes||"")+'</textarea></div>'
     +'<div class="sec-lbl" style="margin-top:6px">Subtasks'+(sp.total?' ('+sp.done+' of '+sp.total+' done)':'')+'</div>'
     +(sp.total?'<div class="subprog"><div style="width:'+sp.pct+'%"></div></div>':'')
     +subListHTML(t)
@@ -1998,7 +1998,7 @@ function openSubtask(taskId,subId){
 /* ---------- Monday-style updates feed (tasks + subtasks) ---------- */
 function updTarget(kind,taskId,subId){ const list=db("tasks",[]); const t=list.find(x=>x.id===taskId); if(!t)return null; if(kind==="sub"){ const s=(t.subtasks||[]).find(x=>x.id===subId); return s?{list:list,t:t,obj:s}:null; } return {list:list,t:t,obj:t}; }
 function updatesComposer(kind,taskId,subId){ attachDraft["upd_att"]=[];
-  return '<div class="updcompose"><textarea class="inp" id="upd_text" placeholder="Write an update, paste a link, or attach a photo..." style="min-height:56px"></textarea>'
+  return '<div class="updcompose"><textarea class="inp" id="upd_text" placeholder="Write an update... type @name to notify a teammate" style="min-height:56px"></textarea>'
     +'<div class="attach" id="upd_att">'+attachEditor("upd_att")+'</div>'
     +'<div style="margin-top:6px;text-align:right"><button class="btn sm" onclick="postUpdate(\''+kind+'\',\''+taskId+'\',\''+(subId||"")+'\')">Post update</button></div></div>';
 }
@@ -2013,7 +2013,7 @@ function postUpdate(kind,taskId,subId){ const tg=updTarget(kind,taskId,subId||nu
   const text=(val("upd_text")||"").trim(); const att=attachClean(attachDraft["upd_att"]);
   if(!text&&!att.length){ toast("Add text, a link or a photo first."); return; }
   tg.obj.updates=tg.obj.updates||[]; tg.obj.updates.push({id:uid("upd"),at:nowISO(),who:currentUserName(),text:text,attach:att});
-  tg.t.updated=nowISO(); save("tasks",tg.list); logAct("update","tasks",tg.t.title);
+  tg.t.updated=nowISO(); save("tasks",tg.list); try{ notifyMentionsText(text, tg.t); }catch(e){} logAct("update","tasks",tg.t.title);
   if(kind==="sub") openSubtask(taskId,subId); else openTask(taskId);
 }
 function delUpdate(kind,taskId,subId,updId){ const tg=updTarget(kind,taskId,subId||null); if(!tg)return; tg.obj.updates=(tg.obj.updates||[]).filter(u=>u.id!==updId); tg.t.updated=nowISO(); save("tasks",tg.list); if(kind==="sub") openSubtask(taskId,subId); else openTask(taskId); }
@@ -3076,7 +3076,8 @@ function saveForm(){
   save(store,list);
   try{ if(typeof NOTIFY_MAP!=="undefined" && NOTIFY_MAP[store]){ const saved=id?list.find(r=>r.id===id):obj; if(saved){
     if(!id){ notifyRecord(store,"created",saved); }
-    else { const af=NOTIFY_MAP[store].assignee||NOTIFY_MAP[store].owner;
+    else { const af=NOTIFY_MAP[store].assignee||NOTIFY_MAP[store].owner; const cf=NOTIFY_MAP[store].collabs;
+      if(cf){ const bef=(prevRec&&Array.isArray(prevRec[cf]))?prevRec[cf]:[]; const aft=Array.isArray(saved[cf])?saved[cf]:[]; const cmeta=Object.assign({email:true},(NOTIFY_MAP[store].idKey&&saved.id)?{[NOTIFY_MAP[store].idKey]:saved.id}:{},NOTIFY_MAP[store].goto?{goto:NOTIFY_MAP[store].goto}:{}); aft.filter(x=>bef.indexOf(x)<0).forEach(p=>notifPush(p, cap(NOTIFY_MAP[store].label||store)+" — you were added as a collaborator: "+recTitle(store,saved), cmeta)); }
       const reassigned=af&&prevRec&&saved[af]&&saved[af]!==prevRec[af];
       const statusChanged=prevRec&&saved.status&&saved.status!==prevRec.status;
       if(reassigned) notifyRecord(store,"assigned",saved,{to:saved[af]});
@@ -4390,6 +4391,7 @@ function tblDelCol(secId,subId,bid,ck){ confirmModal("Delete this column and its
 function nameKey(s){ return String(s||"").trim().toLowerCase().split(/\s+/)[0]; }
 function notifMatch(a,b){ if(!a||!b)return false; return nameKey(a)===nameKey(b); }
 function mentionsIn(text){ if(!text)return []; const pool=(typeof NOTIFY_TEAM!=="undefined"?NOTIFY_TEAM:["Marlon","Isabell","Harold"]).concat(["Julie","Maria"]); const out=[]; const re=/@([a-zA-Z][a-zA-Z0-9._-]*)/g; let m; while((m=re.exec(text))){ const tok=m[1].toLowerCase(); const person=pool.find(n=>n.toLowerCase()===tok)||pool.find(n=>tok.length>=2&&n.toLowerCase().indexOf(tok)===0); if(person&&out.indexOf(person)<0) out.push(person); } return out; }
+function notifyMentionsText(text,t){ if(!text||!t)return; mentionsIn(text).forEach(p=>notifPush(p,"You were mentioned on: "+(t.title||"a task"),{taskId:t.id,email:true})); }
 function notifPush(to,text,meta){ if(!to)return; let me=currentUserName(); try{ if(typeof sessionUser!=="undefined"&&sessionUser&&sessionUser.name) me=sessionUser.name; }catch(e){} if(notifMatch(to,me))return;
   const list=db("notifications",[]); list.push(Object.assign({id:uid("ntf"),to:to,text:text,read:false,by:me,created:nowISO()},meta||{})); save("notifications",list); }
 function notifFor(u){ return db("notifications",[]).filter(n=>notifMatch(n.to,u)); }
@@ -4415,6 +4417,7 @@ function recPeople(store,rec){ const m=NOTIFY_MAP[store]||{}; let out=[];
 }
 function notifyRecord(store,event,rec,extra){ const m=NOTIFY_MAP[store]; if(!m||!rec)return;
   const title=recTitle(store,rec), label=m.label||store; const meta={}; if(m.idKey&&rec.id)meta[m.idKey]=rec.id; if(m.goto)meta.goto=m.goto;
+  if(event==="created"||event==="assigned") meta.email=true;
   if(event==="assigned"){ const to=extra&&extra.to; if(!to)return; if(to==="Shared"){ ["Marlon","Isabell"].forEach(p=>notifPush(p,cap(label)+" assigned to you: "+title,meta)); } else notifPush(to,cap(label)+" assigned to you: "+title,meta); return; }
   let msg;
   if(event==="created") msg="New "+label+" for you: "+title;
@@ -4424,7 +4427,7 @@ function notifyRecord(store,event,rec,extra){ const m=NOTIFY_MAP[store]; if(!m||
   else if(event==="updated" && extra && extra.field==="priority") msg="Priority "+((extra.to)||"")+" on "+label+": "+title;
   else msg=cap(label)+" updated: "+title;
   let people=recPeople(store,rec); if(event==="status"&&people.indexOf("Isabell")<0) people=people.concat("Isabell"); people.forEach(p=>notifPush(p,msg,meta));
-  if(event==="created"||event==="updated"){ const already=new Set(people); const txt=[rec.title,rec.notes,rec.issue,rec.body,rec.text,rec.description].filter(Boolean).join(" "); mentionsIn(txt).forEach(p=>{ if(!already.has(p)) notifPush(p,cap(label)+" mention: "+title,meta); }); }
+  if(event==="created"||event==="updated"){ const already=new Set(people); const mmeta=Object.assign({},meta,{email:true}); const txt=[rec.title,rec.notes,rec.issue,rec.body,rec.text,rec.description].filter(Boolean).join(" "); mentionsIn(txt).forEach(p=>{ if(!already.has(p)) notifPush(p,cap(label)+" mention: "+title,mmeta); }); }
 }
 function notifInApp(event,t,extra){ if(!t)return;
   if(event==="created") notifyRecord("tasks","created",t);
@@ -4440,6 +4443,16 @@ function notifMarkAll(){ const me=currentUserName(); const list=db("notification
 function notifClearRead(){ const me=currentUserName(); save("notifications", db("notifications",[]).filter(n=>!(notifMatch(n.to,me)&&n.read))); renderPage("notif"); updateNavBadges(); }
 let notifScope="me";
 function notifSetScope(s){ notifScope=s; renderPage("notif"); }
+function notifTest(){ const to=val("notif_test_to"); if(!to){ toast("Pick someone."); return; } notifPush(to,"Test notification from "+currentUserName()+" at "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),{goto:"notif"}); toast("Test sent to "+to+". Have them refresh and open All activity."); renderPage("notif"); updateNavBadges(); }
+function notifDiag(){ const cloudOn=(typeof CLOUD!=="undefined"&&CLOUD.on); const n=db("notifications",[]).length;
+  return '<div class="card" style="margin-bottom:12px;border-left:3px solid '+(cloudOn?"var(--ok)":"var(--alert)")+'"><div class="card-bd" style="padding:11px 13px;font-size:12px">'
+    +'<div>Signed in as <b>'+esc(currentUserName())+'</b></div>'
+    +'<div>Sync: <b style="color:'+(cloudOn?"var(--ok)":"var(--alert)")+'">'+(cloudOn?"cloud live — syncs between devices":"local only — will NOT reach other devices")+'</b></div>'
+    +'<div>Notifications in this store: <b>'+n+'</b></div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px"><span>Send a test to</span><select class="inp" id="notif_test_to" style="max-width:130px">'+["Marlon","Isabell","Harold","Lynn","Eva","Julie","Maria"].map(x=>'<option>'+x+'</option>').join("")+'</select><button class="btn sm" onclick="notifTest()">Send test</button></div>'
+    +'<div class="note" style="margin-top:6px">If Sync says <b>local only</b>, cross-device notifications are impossible: everyone must sign in with their email and password so the header shows <b>cloud live</b>. If it says cloud live but a test still does not arrive on the other device after a refresh, tell me and I will check Supabase realtime.</div>'
+    +'</div>';
+}
 function viewNotif(){
   const me=currentUserName();
   const all=notifScope==="all";
@@ -4452,7 +4465,7 @@ function viewNotif(){
     +'</div></div>').join("");
   const seg='<div style="display:flex;gap:6px;margin-bottom:12px"><button class="filterbtn '+(!all?"on":"")+'" onclick="notifSetScope(\'me\')">For me ('+unread+')</button><button class="filterbtn '+(all?"on":"")+'" onclick="notifSetScope(\'all\')">All activity ('+db("notifications",[]).length+')</button></div>';
   return head("Overview","Notifications","Assignments and changes across the hub. Type @name in a task title or notes to notify a teammate, e.g. @harold pest control visits Tuesday. You are never notified about your own actions. Use All activity to see everything the hub has generated.")
-    +seg
+    +notifDiag()+seg
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px"><span class="chip '+(unread?"warn":"ok")+'">'+unread+' unread for you</span><span style="margin-left:auto"></span>'
       +(unread?'<button class="btn ghost sm" onclick="notifMarkAll()">Mark all read</button>':'')
       +'<button class="btn ghost sm" onclick="notifClearRead()">Clear read</button></div>'
