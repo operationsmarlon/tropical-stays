@@ -665,7 +665,7 @@ function cloudSubscribe(){ if(!CLOUD.client) return;
     .on("postgres_changes",{event:"*",schema:"public",table:"records",filter:"tenant_id=eq."+CLOUD.tenant},function(payload){
       const r=payload.new; if(!r||!r.collection) return; if(!CACHE)CACHE={};
       CACHE[r.collection]=r.data; try{ localStorage.setItem(PFX+"cloudcache", JSON.stringify(CACHE)); }catch(e){}
-      try{ if(typeof renderPage==="function") renderPage(currentTab); }catch(e){}
+      try{ if(typeof renderPage==="function") renderPage(currentTab); if(typeof updateNavBadges==="function") updateNavBadges(); }catch(e){}
     }).subscribe(); }
 async function cloudEnter(session){ CLOUD.session=session;
   try{ const pr=await CLOUD.client.from("profiles").select("name,role,tenant_id").eq("id",session.user.id).maybeSingle();
@@ -4387,9 +4387,12 @@ function tblDelCol(secId,subId,bid,ck){ confirmModal("Delete this column and its
 /* ============================================================
    IN-APP NOTIFICATIONS (task assignments and changes)
    ============================================================ */
-function notifPush(to,text,meta){ if(!to)return; let me=currentUserName(); try{ if(typeof sessionUser!=="undefined"&&sessionUser&&sessionUser.name) me=sessionUser.name; }catch(e){} if(to===me)return;
+function nameKey(s){ return String(s||"").trim().toLowerCase().split(/\s+/)[0]; }
+function notifMatch(a,b){ if(!a||!b)return false; return nameKey(a)===nameKey(b); }
+function mentionsIn(text){ if(!text)return []; const pool=(typeof NOTIFY_TEAM!=="undefined"?NOTIFY_TEAM:["Marlon","Isabell","Harold"]).concat(["Julie","Maria"]); const out=[]; const re=/@([a-zA-Z][a-zA-Z0-9._-]*)/g; let m; while((m=re.exec(text))){ const tok=m[1].toLowerCase(); const person=pool.find(n=>n.toLowerCase()===tok)||pool.find(n=>tok.length>=2&&n.toLowerCase().indexOf(tok)===0); if(person&&out.indexOf(person)<0) out.push(person); } return out; }
+function notifPush(to,text,meta){ if(!to)return; let me=currentUserName(); try{ if(typeof sessionUser!=="undefined"&&sessionUser&&sessionUser.name) me=sessionUser.name; }catch(e){} if(notifMatch(to,me))return;
   const list=db("notifications",[]); list.push(Object.assign({id:uid("ntf"),to:to,text:text,read:false,by:me,created:nowISO()},meta||{})); save("notifications",list); }
-function notifFor(u){ return db("notifications",[]).filter(n=>n.to===u); }
+function notifFor(u){ return db("notifications",[]).filter(n=>notifMatch(n.to,u)); }
 function notifUnread(u){ return notifFor(u).filter(n=>!n.read).length; }
 const NOTIFY_TEAM=["Marlon","Isabell","Harold","Lynn","Eva"];
 const NOTIFY_MAP={
@@ -4421,6 +4424,7 @@ function notifyRecord(store,event,rec,extra){ const m=NOTIFY_MAP[store]; if(!m||
   else if(event==="updated" && extra && extra.field==="priority") msg="Priority "+((extra.to)||"")+" on "+label+": "+title;
   else msg=cap(label)+" updated: "+title;
   let people=recPeople(store,rec); if(event==="status"&&people.indexOf("Isabell")<0) people=people.concat("Isabell"); people.forEach(p=>notifPush(p,msg,meta));
+  if(event==="created"||event==="updated"){ const already=new Set(people); const txt=[rec.title,rec.notes,rec.issue,rec.body,rec.text,rec.description].filter(Boolean).join(" "); mentionsIn(txt).forEach(p=>{ if(!already.has(p)) notifPush(p,cap(label)+" mention: "+title,meta); }); }
 }
 function notifInApp(event,t,extra){ if(!t)return;
   if(event==="created") notifyRecord("tasks","created",t);
@@ -4432,21 +4436,27 @@ function notifInApp(event,t,extra){ if(!t)return;
 function fmtWhen(iso){ if(!iso)return""; try{ return new Date(iso).toLocaleString("en-AU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}); }catch(e){ return String(iso).slice(0,16).replace("T"," "); } }
 function notifClickOpen(id){ const list=db("notifications",[]); const n=list.find(x=>x.id===id); if(n&&!n.read){ n.read=true; save("notifications",list); } if(n&&n.taskId){ const t=db("tasks",[]).find(x=>x.id===n.taskId); if(t){ updateNavBadges(); openTask(n.taskId); return; } } if(n&&n.goto){ updateNavBadges(); go(n.goto); return; } renderPage("notif"); updateNavBadges(); }
 function notifMarkRead(id){ const list=db("notifications",[]); const n=list.find(x=>x.id===id); if(n)n.read=true; save("notifications",list); renderPage("notif"); updateNavBadges(); }
-function notifMarkAll(){ const me=currentUserName(); const list=db("notifications",[]); list.forEach(n=>{ if(n.to===me)n.read=true; }); save("notifications",list); renderPage("notif"); updateNavBadges(); }
-function notifClearRead(){ const me=currentUserName(); save("notifications", db("notifications",[]).filter(n=>!(n.to===me&&n.read))); renderPage("notif"); updateNavBadges(); }
+function notifMarkAll(){ const me=currentUserName(); const list=db("notifications",[]); list.forEach(n=>{ if(notifMatch(n.to,me))n.read=true; }); save("notifications",list); renderPage("notif"); updateNavBadges(); }
+function notifClearRead(){ const me=currentUserName(); save("notifications", db("notifications",[]).filter(n=>!(notifMatch(n.to,me)&&n.read))); renderPage("notif"); updateNavBadges(); }
+let notifScope="me";
+function notifSetScope(s){ notifScope=s; renderPage("notif"); }
 function viewNotif(){
   const me=currentUserName();
-  const list=notifFor(me).slice().sort((a,b)=>(b.created||"").localeCompare(a.created||""));
-  const unread=list.filter(n=>!n.read).length;
+  const all=notifScope==="all";
+  const src=all?db("notifications",[]):notifFor(me);
+  const list=src.slice().sort((a,b)=>(b.created||"").localeCompare(a.created||""));
+  const unread=notifFor(me).filter(n=>!n.read).length;
   const rows=list.map(n=>'<div class="card" style="margin-bottom:8px'+(!n.read?';border-left:3px solid var(--dgreen)':'')+'"><div class="card-bd" style="padding:11px 13px;display:flex;gap:10px;align-items:center">'
-    +'<div class="grow" style="cursor:'+((n.taskId||n.goto)?"pointer":"default")+'" onclick="notifClickOpen(\''+n.id+'\')"><div'+(!n.read?' style="font-weight:600"':'')+'>'+esc(n.text)+'</div><div class="muted mono" style="font-size:10px">'+esc(fmtWhen(n.created))+(n.by?" · from "+esc(n.by):"")+((n.taskId||n.goto)?" · tap to open":"")+'</div></div>'
-    +(!n.read?'<button class="btn ghost sm" onclick="notifMarkRead(\''+n.id+'\')">Mark read</button>':'<span class="chip">read</span>')
+    +'<div class="grow" style="cursor:'+((n.taskId||n.goto)?"pointer":"default")+'" onclick="notifClickOpen(\''+n.id+'\')"><div'+(!n.read?' style="font-weight:600"':'')+'>'+esc(n.text)+'</div><div class="muted mono" style="font-size:10px">'+esc(fmtWhen(n.created))+(all&&n.to&&n.to!==me?" · to "+esc(n.to):"")+(n.by?" · from "+esc(n.by):"")+((n.taskId||n.goto)?" · tap to open":"")+'</div></div>'
+    +(!n.read&&n.to===me?'<button class="btn ghost sm" onclick="notifMarkRead(\''+n.id+'\')">Mark read</button>':(n.read&&n.to===me?'<span class="chip">read</span>':''))
     +'</div></div>').join("");
-  return head("Overview","Notifications","Assignments and changes across the hub, tasks, maintenance, servicing, claims and more, land here for whoever is signed in. Contractor jobs route to you and Isabell.")
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px"><span class="chip '+(unread?"warn":"ok")+'">'+unread+' unread</span><span style="margin-left:auto"></span>'
+  const seg='<div style="display:flex;gap:6px;margin-bottom:12px"><button class="filterbtn '+(!all?"on":"")+'" onclick="notifSetScope(\'me\')">For me ('+unread+')</button><button class="filterbtn '+(all?"on":"")+'" onclick="notifSetScope(\'all\')">All activity ('+db("notifications",[]).length+')</button></div>';
+  return head("Overview","Notifications","Assignments and changes across the hub. Type @name in a task title or notes to notify a teammate, e.g. @harold pest control visits Tuesday. You are never notified about your own actions. Use All activity to see everything the hub has generated.")
+    +seg
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px"><span class="chip '+(unread?"warn":"ok")+'">'+unread+' unread for you</span><span style="margin-left:auto"></span>'
       +(unread?'<button class="btn ghost sm" onclick="notifMarkAll()">Mark all read</button>':'')
       +'<button class="btn ghost sm" onclick="notifClearRead()">Clear read</button></div>'
-    +(rows||'<div class="card"><div class="empty"><h4>No notifications</h4><p>When someone assigns you a task, it shows up here.</p></div></div>');
+    +(rows||'<div class="card"><div class="empty"><h4>'+(all?"Nothing yet":"Nothing for you yet")+'</h4><p>'+(all?"Assign a task or change a status and it appears here.":"Notes about your own actions go to the others involved. Switch to All activity to see everything.")+'</p></div></div>');
 }
 
 /* ============================================================
