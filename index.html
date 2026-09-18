@@ -2440,9 +2440,9 @@ function openProp(id){
     +cons.slice(0,8).map(x=>'<div class="rowline"><div class="grow"><div>'+esc(x.item||"item")+'</div>'+(attachCount(x.attach)?'<div style="margin-top:4px">'+attachView(x.attach)+'</div>':'')+'</div><span class="chip '+(x.invoiceStatus==="Paid"||x.invoiceStatus==="Invoiced"?"ok":"")+'">'+esc(x.invoiceStatus||"logged")+'</span></div>').join(""):"";
   const pAttachBlock=attachCount(p.attach)?'<div style="margin-top:16px"><div class="sec-lbl">Documents & Drive links</div>'+attachView(p.attach)+'</div>':"";
   const rp=Array.isArray(p.refPhotos)?p.refPhotos:[];
-  const photoBlock=rp.length?'<div style="margin-top:16px"><div class="sec-lbl">Reference photos ('+rp.length+')</div><div class="refgrid">'
-    +rp.map(ph=>'<a class="refph" href="'+esc(ph.url)+'" target="_blank" rel="noopener"><img src="'+esc(ph.url)+'" alt="'+esc(ph.caption||"")+'" loading="lazy"><span>'+esc(ph.caption||"reference photo")+'</span></a>').join("")
-    +'</div></div>':'<div style="margin-top:16px"><div class="sec-lbl">Reference photos</div><div class="muted" style="font-size:12px">None yet. Add image URLs (modem location, breaker box, gas bottles) in Edit property.</div></div>';
+  const photoBlock='<div class="refsec"><div class="refsec-h">Reference photos'+(rp.length?' ('+rp.length+')':'')+' <button class="btn ghost sm" style="float:right;margin-top:-2px" onclick="propAddPhoto(\''+id+'\')">+ Photo</button></div>'
+    +(rp.length?'<div class="refgrid">'+rp.map((ph,i)=>'<div style="position:relative"><a class="refph" href="'+esc(ph.url)+'" target="_blank" rel="noopener"><img src="'+esc(ph.url)+'" alt="'+esc(ph.caption||"")+'" loading="lazy"><span>'+esc(ph.caption||"reference photo")+'</span></a><button class="btn ghost sm" style="position:absolute;top:4px;right:4px;padding:0 6px;background:rgba(255,255,255,.9)" onclick="propRemovePhoto(\''+id+'\','+i+')">x</button></div>').join("")+'</div>':'<div class="muted" style="font-size:12px;padding:4px 0">None yet. Tap + Photo to add one (breaker box, modem, gas bottles).</div>')
+    +'</div>';
   const applic='<div class="sec-lbl" style="margin-top:16px">Quick replies that apply ('+qr.length+')</div>'
     +(qr.length?qr.map(x=>'<div class="rowline"><span class="chip sage">'+esc(x.category)+'</span><div class="grow">'+esc(x.title)+'</div></div>').join(""):'<div class="muted" style="font-size:12px">none tagged</div>')
     +'<div class="sec-lbl" style="margin-top:12px">FAQs that apply ('+fq.length+')</div>'
@@ -2459,6 +2459,7 @@ function openProp(id){
   const secWifi=refSec("03 WiFi & tech", refRow("TV / streaming",p.tvStreaming)+refRow("Smart home devices",p.smartHome));
   const secPark=refSec("04 Parking & transport", refRow("Parking available",p.parking)+refRow("Number of spots",p.numSpots)+refRow("Nearest airport",p.nearestAirport)+refRow("Nearest transit",p.nearestTransit));
   const secAmen=refSec("05 Amenities & appliances", refRow("Washer / dryer",p.washerDryer)+refRow("Trash / bin day",p.binDay)+refRow("Recycling",p.recycling)+refRow("BBQ / grill",p.bbqNote)+refRow("Fireplace",p.fireplace)+refRow("Fire pit",p.firePit)+refRow("Pool / hot tub",p.poolNote)+refRow("Heated pool",p.heatedPool)+refRow("Special amenity notes",p.specialAmenity));
+  const secRules=refSec("06 House rules & policies", refRow("Pets allowed",p.petsAllowed)+refRow("Pet fee",p.petFee)+refRow("Smoking policy",p.smokingPolicy)+refRow("Quiet hours",p.quietHours)+refRow("Party / event policy",p.partyPolicy)+refRow("HOA / community rules",p.hoaRules)+refRow("Coffee",p.coffee)+refRow("Special / beach equipment",p.specialEquipment));
   const secContacts=refSec("07 Key contacts", refRow("Local emergency",p.localEmergency)+refRow("Pool service",p.poolContact)+refRow("Gardener",p.gardener)+refRow("Strata / building",p.strata));
   const secLocal=refSec("08 Local area", refRow("Nearest grocery",p.nearestGrocery)+refRow("Recommended restaurants",p.recommendedRestaurants)+refRow("Top attractions",p.topAttractions));
   const secOps=refSec("09 Ops notes", refRow("Assigned cleaner",p.cleaner)+refRow("Known quirks",p.quirks||p.notes)+refRow("Fuse / breaker",p.fuse)+refRow("Reported damages",p.damages)+refRow("Other ops notes",p.otherOps));
@@ -2471,7 +2472,14 @@ function openProp(id){
   const guestyBlock=Object.keys(gz).length?'<div class="sec-lbl" style="margin-top:16px">Guesty listing data (imported)</div><dl class="pdetail" style="margin:0">'+dumpRow("Title",gz.title)+dumpRow("Address",gz.address)+dumpRow("Owners",gz.owners)+dumpRow("Bedrooms",gz.br)+dumpRow("Beds",gz.beds)+dumpRow("Descriptions",gz.descriptions)+dumpRow("Check-in info",gz.checkin)+dumpRow("WiFi",gz.wifi)+dumpRow("Parking",gz.parking)+dumpRow("Appliances",gz.appliance)+'</dl>':'';
   const suiteBlock=Object.keys(so).length?'<div class="sec-lbl" style="margin-top:16px">SuiteOp guide (imported)</div><dl class="pdetail" style="margin:0">'+dumpRow("Check-in",so.checkin)+dumpRow("Check-out",so.checkout)+dumpRow("Parking",so.parking)+dumpRow("Trash & recycling",so.trash)+dumpRow("Appliances",so.appliances)+dumpRow("Additional",so.additional)+dumpRow("Notes",so.notes)+'</dl>':'';
   const reviewsBlock=(p.reviewsText&&String(p.reviewsText).trim())?'<div class="sec-lbl" style="margin-top:16px">Guest reviews (imported)</div><div class="muted" style="font-size:12px;white-space:pre-wrap;line-height:1.5">'+esc(p.reviewsText)+'</div>':'';
-  const body=featChips(p)+quickBar+secBasics+secAccess+accessBlock+secWifi+secPark+secAmen+secContacts+secLocal+secOps+secLayout+customSec+guestyBlock+suiteBlock+reviewsBlock+photoBlock+pAttachBlock+peopleBlock+resBlock+consBlock+applic+linkedBlocks;
+  const topbar='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">'
+    +'<a class="link" style="cursor:pointer;font-size:12px;font-weight:600" onclick="closeModal();go(\'props\')">&larr; All properties</a>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn ghost sm" onclick="closeModal();openForm(\'properties\',\''+id+'\')">Edit property</button><button class="btn ghost sm" onclick="propAddPhoto(\''+id+'\')">+ Photo</button><button class="btn ghost sm" onclick="propAddFaq(\''+id+'\')">+ FAQ</button></div></div>';
+  const pf=Array.isArray(p.faqs)?p.faqs:[];
+  const faqSec='<div class="refsec"><div class="refsec-h">FAQs'+(pf.length?' ('+pf.length+')':'')+' <button class="btn ghost sm" style="float:right;margin-top:-2px" onclick="propAddFaq(\''+id+'\')">+ FAQ</button></div>'
+    +(pf.length?pf.map(f=>'<div class="rsrow"><div class="rsk">Q: '+esc(f.q)+'</div><div class="rsv">A: '+esc(f.a||"")+' <button class="btn ghost sm" style="padding:0 6px;margin-left:6px" onclick="propRemoveFaq(\''+id+'\',\''+f.id+'\')">x</button></div></div>').join(""):'<div class="muted" style="font-size:12px;padding:4px 0">No FAQs yet. Tap + FAQ to add one.</div>')
+    +'</div>';
+  const body=topbar+featChips(p)+quickBar+secBasics+secAccess+accessBlock+secWifi+secPark+secAmen+secRules+secContacts+secLocal+secOps+secLayout+customSec+faqSec+photoBlock+guestyBlock+suiteBlock+reviewsBlock+pAttachBlock+peopleBlock+resBlock+consBlock+applic+linkedBlocks;
   openModal(p.nickname, body,
     '<button class="btn ghost" onclick="closeModal()">Close</button><button class="btn" onclick="closeModal();openForm(\'properties\',\''+id+'\')">Edit property</button>');
 }
@@ -2823,6 +2831,10 @@ const COLLECTIONS={
     ["washerDryer","Washer / dryer","text"],["binDay","Trash / bin day","text"],["recycling","Recycling notes","text"],
     ["bbqNote","BBQ / grill","text"],["fireplace","Fireplace","text"],["firePit","Fire pit","text"],["poolNote","Pool / hot tub","text"],
     ["heatedPool","Heated pool","text"],["specialAmenity","Special amenity notes","textarea"],
+    ["_h6","06 House rules & policies","heading"],
+    ["petsAllowed","Pets allowed","text"],["petFee","Pet fee","text"],["smokingPolicy","Smoking policy","text"],
+    ["quietHours","Quiet hours","text"],["partyPolicy","Party / event policy","text"],["hoaRules","HOA / community rules","text"],
+    ["coffee","Coffee setup","text"],["specialEquipment","Special / beach equipment","textarea"],
     ["_h7","07 Key contacts","heading"],
     ["localEmergency","Local emergency","text"],["poolContact","Pool service contact","text"],["gardener","Gardener contact","text"],["strata","Strata / building contact","textarea"],
     ["_h8","08 Local area","heading"],
@@ -4541,6 +4553,25 @@ function midSaveStay(){
   save("midstay",list); closeModal(); renderPage("midstay");
 }
 function midDelStay(){ confirmModal("Delete this stay and all its cleans?",function(){ save("midstay", midList().filter(r=>r.id!==midStayCtx)); midStayCtx=null; closeModal(); renderPage("midstay"); }); }
+
+/* ============================================================
+   PER-PROPERTY PHOTOS AND FAQS
+   ============================================================ */
+function propAddPhoto(id){ const p=propById(id); if(!p)return;
+  openModal("Add reference photo",
+    '<div class="field"><label>Image URL</label><input class="inp" id="php_url" placeholder="https://..."></div>'
+    +'<div class="field"><label>Caption</label><input class="inp" id="php_cap" placeholder="e.g. Breaker box location"></div>'
+    +'<div class="note">Paste a link to an image (Google Drive share link, Photos link, or any image URL).</div>',
+    '<button class="btn ghost" onclick="closeModal();openProp(\''+id+'\')">Cancel</button><button class="btn" onclick="propAddPhotoSave(\''+id+'\')">Add</button>'); }
+function propAddPhotoSave(id){ const url=val("php_url").trim(); if(!url){ toast("Add an image URL."); return; } const list=db("properties",[]); const p=list.find(x=>x.id===id); if(!p)return; p.refPhotos=Array.isArray(p.refPhotos)?p.refPhotos:[]; p.refPhotos.push({url:url,caption:val("php_cap").trim()}); p.updated=nowISO(); save("properties",list); closeModal(); openProp(id); }
+function propRemovePhoto(id,idx){ const list=db("properties",[]); const p=list.find(x=>x.id===id); if(p&&Array.isArray(p.refPhotos)){ p.refPhotos.splice(idx,1); p.updated=nowISO(); save("properties",list); } closeModal(); openProp(id); }
+function propAddFaq(id){ const p=propById(id); if(!p)return;
+  openModal("Add FAQ for "+esc(p.nickname||"property"),
+    '<div class="field"><label>Question</label><input class="inp" id="pfq_q" placeholder="e.g. Is the pool heated?"></div>'
+    +'<div class="field"><label>Answer</label><textarea class="inp" id="pfq_a" placeholder="e.g. Yes, set to 104F year-round."></textarea></div>',
+    '<button class="btn ghost" onclick="closeModal();openProp(\''+id+'\')">Cancel</button><button class="btn" onclick="propAddFaqSave(\''+id+'\')">Add</button>'); }
+function propAddFaqSave(id){ const q=val("pfq_q").trim(); if(!q){ toast("Add a question."); return; } const list=db("properties",[]); const p=list.find(x=>x.id===id); if(!p)return; p.faqs=Array.isArray(p.faqs)?p.faqs:[]; p.faqs.push({id:uid("pfaq"),q:q,a:val("pfq_a").trim()}); p.updated=nowISO(); save("properties",list); closeModal(); openProp(id); }
+function propRemoveFaq(id,fid){ const list=db("properties",[]); const p=list.find(x=>x.id===id); if(p&&Array.isArray(p.faqs)){ p.faqs=p.faqs.filter(f=>f.id!==fid); p.updated=nowISO(); save("properties",list); } closeModal(); openProp(id); }
 
 /* ============================================================
    BOOT
