@@ -121,9 +121,18 @@ h1,h2,h3{margin:0}
 
 .page{flex:1;overflow-y:auto;padding:24px 26px 60px}
 .pg-eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--tan);margin-bottom:5px}
-.pg-title{font-family:var(--disp);font-size:26px;font-weight:500;color:var(--ink);line-height:1.1}
-.pg-sub{color:var(--muted);font-size:12.5px;margin-top:6px;max-width:720px}
-.pg-head{margin-bottom:18px}
+.pg-title{font-family:var(--disp);font-size:18px;font-weight:600;color:var(--ink);line-height:1.2;white-space:nowrap;flex:none;margin:0}
+.pg-sub{color:var(--muted);font-size:12px;margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pg-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+.pg-head.stick{position:sticky;top:0;z-index:12;background:var(--bg);margin:0 -26px 12px;padding:9px 26px;border-bottom:1px solid var(--line)}
+@media(max-width:760px){.pg-head.stick{margin:0 -14px 10px;padding:8px 14px}.pg-head .pg-sub{display:none}}
+.pgfrozen{flex:none;background:var(--bg);border-bottom:1px solid var(--line);padding:5px 0}
+.pgfrozen:empty{display:none}
+.pg-head.frozen{position:static;margin:0;padding:3px 26px;border-bottom:none;background:transparent}
+.filterbar.frozen{position:static;margin:0;padding:4px 26px;border-bottom:none;background:transparent;top:auto;z-index:auto}
+@media(max-width:760px){.pg-head.frozen,.filterbar.frozen{padding-left:14px;padding-right:14px}.pg-head.frozen .pg-sub{display:none}}
+.kpis.frozen{margin:2px 26px 10px}
+@media(max-width:760px){.kpis.frozen{margin:2px 14px 8px}}
 
 /* ---------- kpi ---------- */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
@@ -159,7 +168,7 @@ h1,h2,h3{margin:0}
 /* ---------- tables ---------- */
 .tbl{width:100%;border-collapse:collapse;font-size:12.5px}
 .tbl th{text-align:left;font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--muted);font-weight:500;padding:9px 12px;border-bottom:1px solid var(--line);background:var(--bg)}
+  color:var(--muted);font-weight:500;padding:9px 12px;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;z-index:6}
 .tbl td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr:hover td{background:var(--bg)}
@@ -286,7 +295,7 @@ textarea.inp{resize:vertical;min-height:64px}
 .tb-user{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--ink2);border:1px solid var(--line2);border-radius:20px;padding:3px 10px}
 .tb-user b{color:var(--ink);font-weight:600}
 .tb-user .role{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--tan)}
-.toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:9px 22px;border-bottom:1px solid var(--line);background:var(--card)}
+.toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:9px 22px;border-bottom:1px solid var(--line);background:var(--card);flex-shrink:0}
 .toolbar .tb-lead{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--tan);margin-right:2px}
 .toolbtn{font-size:12px;color:var(--dgreen);background:var(--sage-l);border:1px solid var(--sage-b);border-radius:var(--r);padding:4px 11px;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .12s}
 .toolbtn:hover{background:var(--sage)}
@@ -314,6 +323,12 @@ textarea.inp{resize:vertical;min-height:64px}
 .atkind.photo{background:var(--sage-l);border-color:var(--sage-b);color:var(--dgreen)}
 .atkind.doc{background:#fff4e5;border-color:#ffd9a8;color:#b26a00}
 .atthumb img{width:34px;height:34px;object-fit:cover;border-radius:var(--r);border:1px solid var(--line)}
+.dropzone{margin-top:8px;border:1.5px dashed var(--line2);border-radius:var(--r2);padding:14px;text-align:center;color:var(--ink2);background:var(--bg);transition:.12s;cursor:pointer}
+.dropzone:hover{border-color:var(--sage-d);background:var(--sage-l)}
+.dropzone.dz-over{border-color:var(--dgreen);background:var(--sage-l)}
+.dropzone b{color:var(--ink)}
+.apbar{height:6px;border-radius:6px;background:var(--line);overflow:hidden;margin-top:4px}
+.apbar i{display:block;height:100%;background:var(--sage-d);width:0;transition:width .15s}
 .attach-tools{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
 .atlinks{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .atlink{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r);padding:7px 10px;text-decoration:none;background:var(--card)}
@@ -322,7 +337,7 @@ textarea.inp{resize:vertical;min-height:64px}
 .atlink.drive{border-color:#c6dafc}.atlink.drive span{color:#1a56c4}
 .atlink.doc{border-color:#ffd9a8}.atlink.doc span{color:#b26a00}
 .form-sec{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dgreen);border-bottom:1px solid var(--line);padding-bottom:5px;margin:16px 0 4px}
-.refsec{margin-top:16px}
+.refsec{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:13px 15px;box-shadow:0 1px 2px rgba(17,26,36,.04)}
 .refsec-h{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--tan);border-bottom:1px solid var(--line);padding-bottom:5px;margin-bottom:6px}
 .rsrow{display:flex;gap:12px;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}
 .rsrow:last-child{border-bottom:none}
@@ -335,6 +350,23 @@ textarea.inp{resize:vertical;min-height:64px}
 .qchip span{font-family:var(--mono);font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--tan)}
 .qchip b{font-family:var(--mono);font-size:13px;color:var(--dgreen)}
 .qchip:hover{background:var(--sage)}
+/* ---------- SD STR property sheet: sticky header ---------- */
+.propsticky{position:sticky;top:0;z-index:9;background:var(--bg);margin:-24px -26px 14px;padding:12px 26px;border-bottom:1px solid var(--line)}
+.ps-row1{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.ps-back{cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap}
+.ps-name{font-family:var(--disp);font-size:17px;font-weight:600;line-height:1.15;min-width:0}
+.ps-actions{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.propsticky .qbar{margin-top:9px;margin-bottom:0}
+@media(max-width:760px){.propsticky{margin:-16px -14px 12px;padding:10px 14px}.ps-actions{margin-left:0}}
+/* ---------- collapsible reference sections ---------- */
+.refsec.collap>.refsec-h{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.rc-chev{width:13px;height:13px;fill:none;stroke:var(--tan);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s;flex:none;margin-left:8px}
+.refsec.collap.closed .rc-chev{transform:rotate(-90deg)}
+.refsec.collap.closed .rsbody{display:none}
+.refsec.collap.closed>.refsec-h{border-bottom:none;margin-bottom:0;padding-bottom:0}
+/* ---------- global sticky filter/toolbar bars ---------- */
+.filterbar{position:sticky;top:0;z-index:11;display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--bg);margin:0 -26px 14px;padding:10px 26px;border-bottom:1px solid var(--line)}
+@media(max-width:760px){.filterbar{margin:0 -14px 12px;padding:8px 14px}}
 .calbtns{display:inline-flex;gap:3px;margin-left:6px;vertical-align:middle}
 .calbtn{font-family:var(--mono);font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:var(--info);background:var(--info-l);border:1px solid var(--info-b);border-radius:var(--r);padding:1px 6px;cursor:pointer;line-height:1.7}
 .calbtn:hover{filter:brightness(.96)}
@@ -413,7 +445,7 @@ textarea.inp{resize:vertical;min-height:64px}
   .kpis{grid-template-columns:repeat(2,1fr)!important}
   .subtabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .modal{width:94vw!important;max-width:94vw!important;max-height:88vh}
-  .pg-title{font-size:22px}
+  .pg-title{font-size:16px}
   .tbl{font-size:12px}
   .refgrid{grid-template-columns:repeat(auto-fill,minmax(92px,1fr))}
 }
@@ -486,7 +518,7 @@ textarea.inp{resize:vertical;min-height:64px}
 }
 @media(max-width:430px){
   .kpis{grid-template-columns:1fr 1fr!important;gap:8px}
-  .pg-title{font-size:20px}
+  .pg-title{font-size:15px}
   .pg-sub{font-size:12px}
   .hero .steps{grid-template-columns:1fr}
 }
@@ -523,6 +555,25 @@ textarea.inp{resize:vertical;min-height:64px}
 .srch-row:hover{border-color:var(--dgreen);background:var(--sage-l)}
 .srch-t{font-size:13px;font-weight:600;color:var(--ink)}
 .srch-x{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+
+/* ---------- upsells ---------- */
+.upshero summary{list-style:none;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.upshero summary::-webkit-details-marker{display:none}
+.upshero[open] summary{margin-bottom:12px}
+.upshero .hero-s{margin-bottom:0}
+.upsfilters{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;margin-bottom:8px;-webkit-overflow-scrolling:touch}
+.upsfilters .filterbtn{flex:0 0 auto;white-space:nowrap}
+.upsq{padding-top:12px;border-top:none}
+.upsq .chkrow{margin-top:0}
+.upsact{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.upsdue{font-size:11.5px;color:var(--muted);margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.upsdue b{color:var(--ink2)}
+.upsacts{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+@media(max-width:760px){
+  .upschk .chkpill{padding:9px 11px;font-size:12px}
+  .upsact .btn{flex:1 1 auto;justify-content:center}
+  .upsacts .btn{flex:1 1 auto;justify-content:center}
+}
 </style>
 </head>
 <body>
@@ -578,6 +629,7 @@ textarea.inp{resize:vertical;min-height:64px}
       </div>
     </header>
     <div class="toolbar" id="toolbar"></div>
+    <div class="pgfrozen" id="pgFrozen"></div>
     <div class="page" id="page"></div>
   </main>
 </div>
@@ -745,7 +797,16 @@ let sessionUser=null;
 const SEED_VERSION=7;
 function dateAdd(ymd,days){ const d=new Date((ymd||todayAU())+"T00:00:00"); d.setDate(d.getDate()+(days||0)); return d.toISOString().slice(0,10); }
 function seedRow(k,r){ const o=Object.assign({id:uid(k),created:nowISO(),updated:nowISO()},r); if(o.dueIn!=null){ o.due=dateAdd(todayAU(),o.dueIn); delete o.dueIn; } return o; }
+/* Adds properties that were created after the seed. Idempotent, safe to run on every load. */
+function ensureExtraProps(){
+  const norm=x=>String(x||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+  const extras=[{id:"prop_054",nickname:"30a Charles Street",title:"",address:"30a Charles Street",suburb:"",tags:[],notes:""}];
+  const list=db("properties",[])||[]; let ch=false;
+  extras.forEach(e=>{ if(!list.some(p=>p.id===e.id||norm(p.nickname)===norm(e.nickname))){ list.push(Object.assign({created:nowISO(),updated:nowISO()},e)); ch=true; } });
+  if(ch) save("properties",list);
+}
 function migrate(){
+  ensureExtraProps();
   const s=db("settings",{});
   if(s.seedVersion===SEED_VERSION) return;
   ["sops","workflows","guestComms","quickReplies","faqs","resources"].forEach(k=>{
@@ -920,7 +981,8 @@ function ico(n){ const p={
   panels:'<rect x="4" y="4" width="7" height="16" rx="1"/><rect x="13" y="4" width="7" height="16" rx="1"/>',
   sync:'<path d="M4 12a8 8 0 0 1 13-6l3 2M20 12a8 8 0 0 1-13 6l-3-2"/><path d="M20 4v4h-4M4 20v-4h4"/>',
   box:'<path d="M3 8l9-4 9 4-9 4z"/><path d="M3 8v8l9 4 9-4V8"/><path d="M12 12v8"/>',
-  shield:'<path d="M12 3l7 3v5c0 4-3 7-7 9-4-2-7-5-7-9V6z"/>'
+  shield:'<path d="M12 3l7 3v5c0 4-3 7-7 9-4-2-7-5-7-9V6z"/>',
+  gift:'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v9h14v-9"/><path d="M12 8c-1-3-5-3-5-1s3 1 5 1zM12 8c1-3 5-3 5-1s-3 1-5 1z"/>'
 }; return '<svg viewBox="0 0 24 24">'+(p[n]||"")+'</svg>'; }
 
 const NAV=[
@@ -935,6 +997,7 @@ const NAV=[
   {grp:"Operations", items:[
     {k:"coverage",label:"Shift & coverage",icon:"clock",crumb:"Operations"},
     {k:"midstay",label:"Mid-stay cleans",icon:"cal",crumb:"Operations"},
+    {k:"upsells",label:"Upsells",icon:"gift",crumb:"Operations",badge:"upsells"},
     {k:"flows",label:"Workflows",icon:"bolt",crumb:"Operations"},
     {k:"maint",label:"Maintenance",icon:"wrench",crumb:"Operations",badge:"maint"},
     {k:"serv",label:"Servicing",icon:"cal",crumb:"Operations",badge:"serv"},
@@ -1018,7 +1081,7 @@ function updateNavBadges(){
   const m=db("maintenance",[]).filter(x=>x.status!=="Done").length;
   const today=todayAU();
   const so=db("servicing",[]).filter(x=>x.status!=="Done"&&x.nextDue&&x.nextDue<today).length;
-  setBadge("tasks",t,tp>0); setBadge("maint",m,db("maintenance",[]).some(x=>x.needsApproval&&x.status!=="Done")); setBadge("serv",so,so>0); try{const nu=notifUnread(currentUserName()); setBadge("notif",nu,nu>0);}catch(e){}
+  setBadge("tasks",t,tp>0); setBadge("maint",m,db("maintenance",[]).some(x=>x.needsApproval&&x.status!=="Done")); setBadge("serv",so,so>0); try{ setBadge("upsells",upsOpenCount(),upsAttnCount()>0); }catch(e){} try{const nu=notifUnread(currentUserName()); setBadge("notif",nu,nu>0);}catch(e){}
   document.getElementById("footProps").textContent=db("properties",[]).length;
 }
 function setBadge(id,n,warn){ const el=document.getElementById("nbc_"+id); if(!el)return; if(!n){ el.style.display="none"; return; } el.style.display=""; el.textContent=n; el.classList.toggle("warn",!!warn); }
@@ -1028,12 +1091,13 @@ function setBadge(id,n,warn){ const el=document.getElementById("nbc_"+id); if(!e
    ============================================================ */
 function renderPage(k){
   lockVault();
-  if(k&&k.indexOf("sec:")===0){ const s=sectionById(k.slice(4)); document.getElementById("crumb").textContent="Spaces"; document.getElementById("title").textContent=s?s.name:"Section"; setActiveNav(k); document.getElementById("page").innerHTML=s?viewCustomSection(s.id):viewDash(); updateNavBadges(); syncEditLockBtn(); return; }
+  if(k&&k.indexOf("sec:")===0){ const s=sectionById(k.slice(4)); document.getElementById("crumb").textContent="Spaces"; document.getElementById("title").textContent=s?s.name:"Section"; setActiveNav(k); document.getElementById("page").innerHTML=s?viewCustomSection(s.id):viewDash(); updateNavBadges(); syncEditLockBtn(); stickyAfterRender(); return; }
+  if(k&&k.indexOf("prop:")===0){ const pid=k.slice(5); const p=propById(pid); document.getElementById("crumb").textContent="Portfolio"; document.getElementById("title").textContent=p?p.nickname:"Property"; setActiveNav("props"); document.getElementById("page").innerHTML=propSheetHTML(pid); document.getElementById("page").scrollTop=0; updateNavBadges(); syncEditLockBtn(); stickyAfterRender(); return; }
   const meta=NAVMAP[k]||NAVMAP.dash;
   document.getElementById("crumb").textContent=meta.crumb;
   document.getElementById("title").textContent=meta.label;
   setActiveNav(k);
-  const map={myday:viewMyDay,daily:viewDaily,transcript:viewTranscript,coverage:viewCoverage,midstay:viewMidstay,dash:viewDash,tasks:viewTasks,maint:viewMaint,serv:viewServ,props:viewProps,pipe:viewPipe,
+  const map={myday:viewMyDay,daily:viewDaily,transcript:viewTranscript,coverage:viewCoverage,midstay:viewMidstay,upsells:viewUpsells,dash:viewDash,tasks:viewTasks,maint:viewMaint,serv:viewServ,props:viewProps,pipe:viewPipe,
     sops:()=>viewGeneric("sops"),flows:()=>viewGeneric("workflows"),guest:()=>viewGeneric("guestComms"),
     quick:()=>viewGeneric("quickReplies"),faqs:()=>viewFaqs(),resources:()=>viewGeneric("resources"),
     team:viewTeam,sheets:viewSheets,eod:viewEOD,reviews:viewReviews,notif:viewNotif,owners:viewOwners,revanalytics:viewReviewsAnalysis,balances:viewBalances,groups:viewGroups,linen:viewLinen,consum:viewConsumables,shield:viewShield,edit:viewEdit,contacts:viewContacts};
@@ -1041,8 +1105,23 @@ function renderPage(k){
   updateNavBadges();
   syncEditLockBtn();
   if(pageAfter[k]) pageAfter[k]();
+  stickyAfterRender();
 }
 const pageAfter={};
+/* Freeze the page title, filter bar and table headers, stacked without overlap. */
+function applyStickyOffsets(){
+  const page=document.getElementById("page"); const fr=document.getElementById("pgFrozen");
+  if(fr) fr.innerHTML="";
+  if(!page) return;
+  if(fr){
+    const h=page.querySelector(".pg-head"); if(h){ h.classList.remove("stick"); h.classList.add("frozen"); fr.appendChild(h); }
+    const k=page.querySelector(":scope > .kpis"); if(k){ k.classList.add("frozen"); fr.appendChild(k); }
+    const b=page.querySelector(":scope > .filterbar"); if(b){ b.classList.add("frozen"); b.style.top=""; fr.appendChild(b); }
+  }
+  page.querySelectorAll("table.tbl thead th").forEach(function(th){ th.style.top="0px"; });
+}
+function stickyAfterRender(){ (window.requestAnimationFrame||function(f){setTimeout(f,0);})(applyStickyOffsets); }
+window.addEventListener("resize", stickyAfterRender);
 
 /* ============================================================
    GLOBAL HUB SEARCH  (Cmd/Ctrl+K or the top-bar search button)
@@ -1065,7 +1144,8 @@ const SEARCH_MAP=[
   {store:"reviews",tab:"reviews",singular:"Review",label:"guest",propRef:"property",form:true},
   {store:"consumables",tab:"consum",singular:"Consumable",label:"item",propRef:"property",form:true},
   {store:"users",tab:"team",singular:"Team member",label:"name"},
-  {store:"midstay",tab:"midstay",singular:"Mid-stay clean",label:"guest",propRef:"listingId"}
+  {store:"midstay",tab:"midstay",singular:"Mid-stay clean",label:"guest",propRef:"listingId"},
+  {store:"upsells",tab:"upsells",singular:"Upsell",label:"title",propRef:"propertyId",open:id=>upsFocus(id)}
 ];
 function hubRecText(rec,cfg){
   const parts=[];
@@ -1124,8 +1204,9 @@ function hubGo(ci,id){
 }
 document.addEventListener("keydown",function(e){ if((e.metaKey||e.ctrlKey)&&(e.key==="k"||e.key==="K")){ e.preventDefault(); openSearch(); } });
 
+try{console.log("TS Ops Hub build: upsells 2026-09-21");}catch(e){}
 function head(eyebrow,title,sub){
-  return '<div class="pg-head"><div class="pg-eyebrow">'+esc(eyebrow)+'</div><div class="pg-title">'+esc(title)+'</div>'+(sub?'<div class="pg-sub">'+sub+'</div>':"")+'</div>';
+  return '<div class="pg-head stick"><h1 class="pg-title">'+esc(title)+'</h1>'+(sub?'<p class="pg-sub">'+sub+'</p>':"")+'</div>';
 }
 
 /* ---------- property helpers ---------- */
@@ -1687,6 +1768,7 @@ function viewDash(){
   attn.push(aRow(servOverdue.length,"Overdue servicing",servOverdue.length?"alert":"ok","serv"));
   attn.push(aRow(needAppr.length,"Maintenance awaiting Isabell approval",needAppr.length?"warn":"ok","maint"));
   attn.push(aRow(maintOpen.length,"Open maintenance jobs",maintOpen.length?"info":"ok","maint"));
+  try{ const ua=upsAttnCount(); attn.push(aRow(ua,"Upsells to action today or overdue",ua?"warn":"ok","upsells")); }catch(e){}
 
   const myDay=overdueTasks.concat(dueToday);
   const dayHTML = myDay.length
@@ -1791,7 +1873,7 @@ function taskToolbar(){
   const prioSel='<select class="inp" style="max-width:110px" onchange="taskФ.prio=this.value;renderPage(\'tasks\')"><option value="">Any priority</option>'+["P1","P2","P3"].map(p=>'<option '+(taskФ.prio===p?"selected":"")+'>'+p+'</option>').join("")+'</select>';
   const grpSel=taskФ.view==="board"?'<select class="inp" style="max-width:150px" onchange="taskФ.group=this.value;renderPage(\'tasks\')">'+[["status","Group: Status"],["assignee","Group: Assignee"],["property","Group: Property"],["priority","Group: Priority"]].map(([k,l])=>'<option value="'+k+'" '+(taskФ.group===k?"selected":"")+'>'+l+'</option>').join("")+'</select>':"";
   const statusChips=taskФ.view==="list"?[["open","Not started"],["progress","In progress"],["waiting","Waiting"],["blocked","Blocked"],["done","Completed"],["all","All"]].map(([k,l])=>'<button class="filterbtn '+(taskФ.status===k?"on":"")+'" onclick="taskФ.status=\''+k+'\';renderPage(\'tasks\')">'+l+'</button>').join(""):"";
-  return '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">'
+  return '<div class="filterbar">'
       +'<div class="seg">'+vbtn("list","List")+vbtn("board","Board")+vbtn("calendar","Calendar")+'</div>'
       +'<input class="inp" style="max-width:180px" placeholder="Search tasks" value="'+esc(taskФ.q)+'" oninput="taskФ.q=this.value;renderPage(\'tasks\')">'
       +asgSel+propSel+prioSel+grpSel
@@ -2066,7 +2148,7 @@ function maintJobs(){
       +'<td><span class="chip '+statusTone(m.status)+'">'+esc(m.status||"Reported")+'</span></td>'
       +'<td class="rowact"><button class="btn ghost sm" onclick="openForm(\'maintenance\',\''+m.id+'\')">Edit</button> <button class="btn ghost sm" onclick="delRow(\'maintenance\',\''+m.id+'\')">Del</button></td></tr>';
     }).join("");
-  return '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">'
+  return '<div class="filterbar">'
       +'<input class="inp" style="max-width:220px" placeholder="Search jobs" value="'+esc(maintФ.q)+'" oninput="maintФ.q=this.value;renderPage(\'maint\')">'
       +["open","done","all"].map(k=>'<button class="filterbtn '+(maintФ.status===k?"on":"")+'" onclick="maintФ.status=\''+k+'\';renderPage(\'maint\')">'+(k==="open"?"Open":k==="done"?"Done":"All")+'</button>').join("")
       +'<span class="chip" style="margin-left:6px">'+open.length+' open</span>'
@@ -2089,7 +2171,7 @@ function maintMidstay(){
       +'<td><span class="chip '+statusTone(m.status)+'">'+esc(m.status||"Requested")+'</span></td>'
       +'<td class="rowact"><button class="btn ghost sm" onclick="openForm(\'midstay\',\''+m.id+'\')">Edit</button> <button class="btn ghost sm" onclick="delRow(\'midstay\',\''+m.id+'\')">Del</button></td></tr>';
   }).join("");
-  return '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">'
+  return '<div class="filterbar">'
       +'<span class="chip">'+all.filter(m=>m.status!=="Done").length+' open</span>'
       +'<button class="btn sm" style="margin-left:auto" onclick="midOpenStay()">Add stay / reservation</button>'
     +'</div>'
@@ -2107,7 +2189,7 @@ function maintServType(tab){
       +'<td><span class="chip '+statusTone(s.status)+'">'+esc(s.status||"Scheduled")+'</span></td>'
       +'<td class="rowact"><button class="btn ghost sm" onclick="openForm(\'servicing\',\''+s.id+'\')">Edit</button> <button class="btn ghost sm" onclick="delRow(\'servicing\',\''+s.id+'\')">Del</button></td></tr>';
   }).join("");
-  return '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">'
+  return '<div class="filterbar">'
       +'<span class="chip">'+all.filter(s=>s.status!=="Done").length+' open</span>'
       +'<span class="muted" style="font-size:11px">Shared with the Servicing page, filtered to '+esc(label)+'.</span>'
       +'<button class="btn sm" style="margin-left:auto" onclick="openForm(\'servicing\',null,{type:\''+esc(type)+'\'})">Add '+esc(label)+'</button>'
@@ -2387,7 +2469,7 @@ function viewProps(){
   }).join("");
   return head("Portfolio","Properties",
       "Access codes, lockbox numbers, keys and wifi passwords are deliberately not stored here. They live in Guesty or the vault. Owner sits in the detail view, not on the card.")
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">'
+    +'<div class="filterbar">'
       +'<input class="inp" style="max-width:220px" placeholder="Search name, address, owner" value="'+esc(propФ.q)+'" oninput="propФ.q=this.value;renderPage(\'props\')">'
       +'<select class="inp" style="max-width:150px" onchange="propФ.suburb=this.value;renderPage(\'props\')"><option value="">All suburbs</option>'+suburbs.map(s=>'<option '+(propФ.suburb===s?"selected":"")+'>'+esc(s)+'</option>').join("")+'</select>'
       +'<button class="filterbtn '+(propФ.pool?"on":"")+'" onclick="propФ.pool=!propФ.pool;renderPage(\'props\')">Pool</button>'
@@ -2401,11 +2483,14 @@ function viewProps(){
     +'<div class="grid3">'+(cards||'<div class="card"><div class="empty"><h4>No matches</h4><p>Adjust filters.</p></div></div>')+'</div>';
 }
 function refRow(l,v){ v=(v==null?"":String(v)).trim(); return (v&&v.toLowerCase()!=="not defined")?'<div class="rsrow"><div class="rsk">'+esc(l)+'</div><div class="rsv">'+esc(v)+'</div></div>':""; }
-function refSec(title,rows){ return rows?'<div class="refsec"><div class="refsec-h">'+esc(title)+'</div>'+rows+'</div>':""; }
+function refSec(title,rows){ return rows?'<div class="refsec collap"><div class="refsec-h" onclick="toggleSec(this)"><span>'+esc(title)+'</span><svg class="rc-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div><div class="rsbody">'+rows+'</div></div>':""; }
+function toggleSec(h){ h.parentElement.classList.toggle("closed"); }
 function copyCode(el){ copyText(el.getAttribute("data-code")||"", (el.getAttribute("data-label")||"Code")+" copied"); }
-function openProp(id){
-  const p=propById(id); if(!p)return;
+function openProp(id){ go("prop:"+id); }
+function propSheetHTML(id){
+  const p=propById(id); if(!p)return '<div class="card"><div class="empty"><h4>Property not found</h4></div></div>';
   const oc=propOpenCounts(id); const today=todayAU();
+  const gz=p.guesty||{}, so=p.suiteop||{};
   const tks=db("tasks",[]).filter(t=>t.property===id&&t.status!=="done");
   const mnt=db("maintenance",[]).filter(m=>m.property===id&&m.status!=="Done");
   const srv=db("servicing",[]).filter(s=>s.property===id);
@@ -2441,12 +2526,10 @@ function openProp(id){
   const pAttachBlock=attachCount(p.attach)?'<div style="margin-top:16px"><div class="sec-lbl">Documents & Drive links</div>'+attachView(p.attach)+'</div>':"";
   const rp=Array.isArray(p.refPhotos)?p.refPhotos:[];
   const photoBlock='<div class="refsec"><div class="refsec-h">Reference photos'+(rp.length?' ('+rp.length+')':'')+' <button class="btn ghost sm" style="float:right;margin-top:-2px" onclick="propAddPhoto(\''+id+'\')">+ Photo</button></div>'
-    +(rp.length?'<div class="refgrid">'+rp.map((ph,i)=>'<div style="position:relative"><a class="refph" href="'+esc(ph.url)+'" target="_blank" rel="noopener"><img src="'+esc(ph.url)+'" alt="'+esc(ph.caption||"")+'" loading="lazy"><span>'+esc(ph.caption||"reference photo")+'</span></a><button class="btn ghost sm" style="position:absolute;top:4px;right:4px;padding:0 6px;background:rgba(255,255,255,.9)" onclick="propRemovePhoto(\''+id+'\','+i+')">x</button></div>').join("")+'</div>':'<div class="muted" style="font-size:12px;padding:4px 0">None yet. Tap + Photo to add one (breaker box, modem, gas bottles).</div>')
+    +(rp.length?'<div class="refgrid">'+rp.map((ph,i)=>'<div style="position:relative"><a class="refph" '+(ph.path?'data-apath="'+esc(ph.path)+'"':'href="'+esc(ph.url)+'"')+' target="_blank" rel="noopener"><img '+(ph.path?'data-apath="'+esc(ph.path)+'"':'src="'+esc(ph.url)+'"')+' alt="'+esc(ph.caption||"")+'" loading="lazy"><span>'+esc(ph.caption||"reference photo")+'</span></a><button class="btn ghost sm" style="position:absolute;top:4px;right:4px;padding:0 6px;background:rgba(255,255,255,.9)" onclick="propRemovePhoto(\''+id+'\','+i+')">x</button></div>').join("")+'</div>':'<div class="muted" style="font-size:12px;padding:4px 0">None yet. Tap + Photo to add one (breaker box, modem, gas bottles).</div>')
     +'</div>';
   const applic='<div class="sec-lbl" style="margin-top:16px">Quick replies that apply ('+qr.length+')</div>'
-    +(qr.length?qr.map(x=>'<div class="rowline"><span class="chip sage">'+esc(x.category)+'</span><div class="grow">'+esc(x.title)+'</div></div>').join(""):'<div class="muted" style="font-size:12px">none tagged</div>')
-    +'<div class="sec-lbl" style="margin-top:12px">FAQs that apply ('+fq.length+')</div>'
-    +(fq.length?fq.map(x=>'<div class="rowline"><div class="grow"><div>'+esc(x.question)+'</div>'+(x.answer?'<div class="muted" style="font-size:11px;margin-top:2px">'+esc(x.answer)+'</div>':'')+((x.linkUrl||x.source)?'<div class="mono" style="font-size:10px;margin-top:2px;color:var(--tan)">'+(x.linkUrl?'<a href="'+esc(x.linkUrl)+'" target="_blank" rel="noopener">'+esc(x.linkLabel||"link")+'</a>':'')+(x.linkUrl&&x.source?' &middot; ':'')+(x.source?'source: '+esc(x.source):'')+'</div>':'')+(attachCount(x.attach)?'<div style="margin-top:6px">'+attachView(x.attach)+'</div>':'')+'</div></div>').join(""):'<div class="muted" style="font-size:12px">none tagged</div>');
+    +(qr.length?qr.map(x=>'<div class="rowline"><span class="chip sage">'+esc(x.category)+'</span><div class="grow">'+esc(x.title)+'</div></div>').join(""):'<div class="muted" style="font-size:12px">none tagged</div>');
   const bedbath=[p.bedrooms,p.bathrooms].filter(x=>x!=null&&x!=="").join(" / ");
   const codeChips=[["Entry",p.entry],["Gate / garage",p.gateCode],["Lockbox",p.lockbox||p.lockcode],["Door",p.doorcode],["WiFi",p.wifiName],["WiFi pass",p.wifiPass]].filter(x=>has(x[1]));
   let quickBar="";
@@ -2467,21 +2550,26 @@ function openProp(id){
   const linkedBlocks='<div style="margin-top:16px"><div class="sec-lbl">Open tasks ('+tks.length+')</div>'+linked(tks,t=>'<div class="rowline clickrow" onclick="openTask(\''+t.id+'\')"><span class="chip '+(t.priority==="P1"?"alert":"")+'">'+esc(t.priority||"P3")+'</span><div class="grow">'+esc(t.title)+'</div><span class="mono muted" style="font-size:10px">'+esc(t.due||"")+'</span></div>')+'</div>'
     +'<div style="margin-top:12px"><div class="sec-lbl">Open maintenance ('+mnt.length+')</div>'+linked(mnt,m=>'<div class="rowline"><span class="chip sage">'+esc(m.trade||"General")+'</span><div class="grow">'+esc(m.issue)+'</div><span class="chip '+statusTone(m.status)+'">'+esc(m.status)+'</span></div>')+'</div>'
     +'<div style="margin-top:12px"><div class="sec-lbl">Servicing</div>'+(srv.length?srv.map(s=>{const od=s.status!=="Done"&&s.nextDue&&s.nextDue<today;return '<div class="rowline"><span class="chip sage">'+esc(s.type)+'</span><div class="grow mono" style="font-size:11px">next '+esc(s.nextDue||"-")+(od?" (overdue)":"")+'</div></div>';}).join(""):'<div class="muted" style="font-size:12px;padding:4px 0">no schedules</div>')+'</div>';
-  const gz=p.guesty||{}, so=p.suiteop||{};
   const dumpRow=(l,v)=>(v&&String(v).trim())?'<dt>'+l+'</dt><dd style="white-space:pre-wrap">'+esc(String(v))+'</dd>':'';
-  const guestyBlock=Object.keys(gz).length?'<div class="sec-lbl" style="margin-top:16px">Guesty listing data (imported)</div><dl class="pdetail" style="margin:0">'+dumpRow("Title",gz.title)+dumpRow("Address",gz.address)+dumpRow("Owners",gz.owners)+dumpRow("Bedrooms",gz.br)+dumpRow("Beds",gz.beds)+dumpRow("Descriptions",gz.descriptions)+dumpRow("Check-in info",gz.checkin)+dumpRow("WiFi",gz.wifi)+dumpRow("Parking",gz.parking)+dumpRow("Appliances",gz.appliance)+'</dl>':'';
-  const suiteBlock=Object.keys(so).length?'<div class="sec-lbl" style="margin-top:16px">SuiteOp guide (imported)</div><dl class="pdetail" style="margin:0">'+dumpRow("Check-in",so.checkin)+dumpRow("Check-out",so.checkout)+dumpRow("Parking",so.parking)+dumpRow("Trash & recycling",so.trash)+dumpRow("Appliances",so.appliances)+dumpRow("Additional",so.additional)+dumpRow("Notes",so.notes)+'</dl>':'';
-  const reviewsBlock=(p.reviewsText&&String(p.reviewsText).trim())?'<div class="sec-lbl" style="margin-top:16px">Guest reviews (imported)</div><div class="muted" style="font-size:12px;white-space:pre-wrap;line-height:1.5">'+esc(p.reviewsText)+'</div>':'';
-  const topbar='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">'
-    +'<a class="link" style="cursor:pointer;font-size:12px;font-weight:600" onclick="closeModal();go(\'props\')">&larr; All properties</a>'
-    +'<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn ghost sm" onclick="closeModal();openForm(\'properties\',\''+id+'\')">Edit property</button><button class="btn ghost sm" onclick="propAddPhoto(\''+id+'\')">+ Photo</button><button class="btn ghost sm" onclick="propAddFaq(\''+id+'\')">+ FAQ</button></div></div>';
+  const psTone=(p.status&&/inactive|off|paused|churn|archiv/i.test(p.status))?'warn':(p.status?'ok':'');
+  const psChips=(p.status?'<span class="chip '+psTone+'">'+esc(p.status)+'</span>':'')+(cityOf(p)?'<span class="chip">'+esc(cityOf(p))+'</span>':'');
+  const topbar='<div class="propsticky"><div class="ps-row1">'
+    +'<a class="link ps-back" onclick="closeModal();go(\'props\')">&larr; All</a>'
+    +'<div class="ps-name grow">'+esc(p.nickname||"")+'</div>'+psChips
+    +'<div class="ps-actions"><button class="btn ghost sm" onclick="closeModal();openForm(\'properties\',\''+id+'\')">Edit</button><button class="btn ghost sm" onclick="propAddPhoto(\''+id+'\')">+ Photo</button><button class="btn ghost sm" onclick="propAddFaq(\''+id+'\')">+ FAQ</button></div>'
+    +'</div>'+quickBar+'</div>';
   const pf=Array.isArray(p.faqs)?p.faqs:[];
-  const faqSec='<div class="refsec"><div class="refsec-h">FAQs'+(pf.length?' ('+pf.length+')':'')+' <button class="btn ghost sm" style="float:right;margin-top:-2px" onclick="propAddFaq(\''+id+'\')">+ FAQ</button></div>'
-    +(pf.length?pf.map(f=>'<div class="rsrow"><div class="rsk">Q: '+esc(f.q)+'</div><div class="rsv">A: '+esc(f.a||"")+' <button class="btn ghost sm" style="padding:0 6px;margin-left:6px" onclick="propRemoveFaq(\''+id+'\',\''+f.id+'\')">x</button></div></div>').join(""):'<div class="muted" style="font-size:12px;padding:4px 0">No FAQs yet. Tap + FAQ to add one.</div>')
+  const faqTotal=pf.length+fq.length;
+  const faqItem=(q,a,del)=>'<div style="padding:8px 0;border-top:1px solid var(--line)"><div style="font-weight:600;font-size:13px">'+esc(q)+(del||'')+'</div>'+(a?'<div class="muted" style="font-size:12px;margin-top:2px">'+esc(a)+'</div>':'')+'</div>';
+  const faqSec='<div class="refsec"><div class="refsec-h">FAQs'+(faqTotal?' ('+faqTotal+')':'')+' <button class="btn ghost sm" style="float:right;margin-top:-2px" onclick="propAddFaq(\''+id+'\')">+ FAQ</button></div>'
+    +pf.map(f=>faqItem(f.q,f.a,' <button class="btn ghost sm" style="float:right;padding:0 7px" onclick="propRemoveFaq(\''+id+'\',\''+f.id+'\')">x</button>')).join("")
+    +fq.map(x=>faqItem(x.question,x.answer,'')).join("")
+    +(faqTotal?'':'<div class="muted" style="font-size:12px;padding:4px 0">No FAQs yet. Tap + FAQ to add one.</div>')
     +'</div>';
-  const body=topbar+featChips(p)+quickBar+secBasics+secAccess+accessBlock+secWifi+secPark+secAmen+secRules+secContacts+secLocal+secOps+secLayout+customSec+faqSec+photoBlock+guestyBlock+suiteBlock+reviewsBlock+pAttachBlock+peopleBlock+resBlock+consBlock+applic+linkedBlocks;
-  openModal(p.nickname, body,
-    '<button class="btn ghost" onclick="closeModal()">Close</button><button class="btn" onclick="closeModal();openForm(\'properties\',\''+id+'\')">Edit property</button>');
+  const titleBlock='<div class="muted mono" style="font-size:10px;letter-spacing:.5px;margin:2px 0 2px">PROPERTY REFERENCE SHEET</div>'
+    +(p.address?'<div class="muted" style="font-size:12px;margin-bottom:10px">'+esc(p.address)+'</div>':'<div style="margin-bottom:8px"></div>');
+  const body=topbar+titleBlock+featChips(p)+secBasics+secAccess+accessBlock+secWifi+secPark+secAmen+secRules+secContacts+secLocal+secOps+secLayout+customSec+faqSec+photoBlock+pAttachBlock+peopleBlock+resBlock+consBlock+applic+linkedBlocks;
+  return body;
 }
 function propApplies(item,p){
   if(Array.isArray(item.scope)&&item.scope.length){ return item.scope.indexOf(p.id)>=0; }
@@ -2591,7 +2679,7 @@ function viewContacts(){
     +'<td class="rowact" onclick="event.stopPropagation()"><button class="btn ghost sm" onclick="openForm(\'contacts\',\''+c.id+'\')">Edit</button> <button class="btn ghost sm" onclick="delRow(\'contacts\',\''+c.id+'\')">Del</button></td></tr>').join("");
   return head("People you assign work to","Contacts",
       "Cleaners, contractors, vendors, owners and team. Add someone here and they show up in the assignee, contractor, vendor and cleaner pickers across Tasks, Maintenance, Servicing and Mid-stay cleans.")
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">'
+    +'<div class="filterbar">'
       +'<input class="inp" style="max-width:220px" placeholder="Search name, company, phone" value="'+esc(contactФ.q)+'" oninput="contactФ.q=this.value;renderPage(\'contacts\')">'
       +'<select class="inp" style="max-width:160px" onchange="contactФ.role=this.value;renderPage(\'contacts\')"><option value="">All roles</option>'+roles.map(r=>'<option '+(roleF===r?"selected":"")+'>'+esc(r)+'</option>').join("")+'</select>'
       +'<span class="chip" style="margin-left:6px">'+list.length+' shown</span>'
@@ -2670,6 +2758,7 @@ function faqCard(f){
     +'<div class="tags"><div style="display:flex;gap:5px;flex-wrap:wrap">'+left+'</div>'+catTag+'</div>'
     +'<h4>'+esc(f.question||"")+'</h4>'
     +'<div class="ans">'+esc(f.answer||"")+'</div>'
+    +((Array.isArray(f.attach)&&f.attach.length)?'<div style="margin-top:8px">'+attachView(f.attach)+'</div>':'')
     +'<div class="foot"><button class="faqcopy" onclick="faqCopy(\''+f.id+'\')">Copy answer</button>'
       +'<span class="faqact"><button title="Edit" onclick="faqForm(\''+f.id+'\')">Edit</button><button title="Delete" onclick="faqDelete(\''+f.id+'\')">Delete</button></span></div>'
     +'</div>';
@@ -2731,6 +2820,7 @@ function faqForm(id){
   faqDraft={id:ex?ex.id:null,applies:ex?(ex.applies||"All"):"All",category:ex?(ex.category||"Access"):"Access",question:ex?(ex.question||""):"",answer:ex?(ex.answer||""):"",other:"",scope:(ex&&Array.isArray(ex.scope))?ex.scope.slice():[]};
   const known=FAQ_KNOWN_PROPS.map(k=>k[0]);
   if(faqDraft.applies && known.indexOf(faqDraft.applies)<0){ faqDraft.other=faqDraft.applies; faqDraft.applies=""; }
+  attachInit("faq_att", (ex&&Array.isArray(ex.attach))?ex.attach:[]);
   faqModalRender();
 }
 function faqSync(){
@@ -2741,7 +2831,6 @@ function faqSync(){
   if(o) faqDraft.other=o.value;
 }
 function faqPick(field,val){ faqSync(); faqDraft[field]=val; if(field==="applies") faqDraft.other=""; faqModalRender(); }
-function faqInsert(kind){ faqSync(); const a=document.getElementById("faq_a"); if(!a)return; a.value=(a.value||"")+(kind==="link"?" https://":" [Photo: https://...]"); faqDraft.answer=a.value; a.focus(); }
 function faqScopeToggle(id,on){ if(!faqDraft)return; faqDraft.scope=Array.isArray(faqDraft.scope)?faqDraft.scope:[]; const i=faqDraft.scope.indexOf(id); if(on&&i<0)faqDraft.scope.push(id); if(!on&&i>=0)faqDraft.scope.splice(i,1); }
 function faqScopeFilter(v){ v=(v||"").toLowerCase(); const box=document.getElementById("faqScope"); if(!box)return; box.querySelectorAll(".scoperow").forEach(r=>{ r.style.display=(!v||(r.dataset.name||"").indexOf(v)>=0)?"":"none"; }); }
 function faqModalRender(){
@@ -2760,9 +2849,9 @@ function faqModalRender(){
     +'<div class="faqlbl" style="display:block;margin-bottom:7px">Category</div>'
     +'<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px">'+chips+'</div>'
     +'<div class="field"><label>Question</label><input class="inp" id="faq_q" placeholder="e.g. How do we access the gated garage?" value="'+esc(d.question||"")+'"></div>'
-    +'<div class="field"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><label style="margin:0">Answer (text, links, or photos)</label>'
-      +'<span><button class="btn ghost sm" onclick="faqInsert(\'link\')">+ Link</button> <button class="btn ghost sm" onclick="faqInsert(\'photo\')">+ Photo</button></span></div>'
-      +'<textarea class="inp" id="faq_a" style="min-height:110px" placeholder="Clear, concise instructions for the guest. Paste URLs or insert a [Photo: URL] tag.">'+esc(d.answer||"")+'</textarea></div>';
+    +'<div class="field"><label>Answer (text)</label>'
+      +'<textarea class="inp" id="faq_a" style="min-height:100px" placeholder="Clear, concise instructions for the guest.">'+esc(d.answer||"")+'</textarea></div>'
+    +'<div class="field"><label>Photos &amp; files</label><div class="attach" id="faq_att">'+attachEditor("faq_att")+'</div></div>';
   const foot=(d.id?'<button class="btn ghost" style="margin-right:auto;color:var(--alert)" onclick="faqDelete(\''+d.id+'\')">Delete</button>':"")
     +'<button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="faqSave()">'+(d.id?"Save changes":"Add FAQ")+'</button>';
   openModal(d.id?"Edit FAQ entry":"Log new FAQ entry",body,foot);
@@ -2771,13 +2860,14 @@ function faqSave(){
   faqSync(); const d=faqDraft; if(!d) return;
   const applies=(d.other&&d.other.trim())?d.other.trim():d.applies;
   const q=(d.question||"").trim(), a=(d.answer||"").trim();
+  const attach=attachClean(attachDraft["faq_att"]);
   if(!applies){ toast("Pick a property or type one."); return; }
   if(!q){ toast("Add a question."); return; }
-  if(!a){ toast("Add an answer."); return; }
+  if(!a && !attach.length){ toast("Add an answer or attach a photo/file."); return; }
   const list=db("faqs",[]);
   const scope=Array.isArray(d.scope)?d.scope:[];
-  if(d.id){ const f=list.find(x=>x.id===d.id); if(f){ f.applies=applies; f.category=d.category; f.question=q; f.answer=a; f.scope=scope; f.updated=nowISO(); } }
-  else { list.push({id:uid("faq"),applies:applies,category:d.category,question:q,answer:a,scope:scope,created:nowISO(),updated:nowISO()}); }
+  if(d.id){ const f=list.find(x=>x.id===d.id); if(f){ f.applies=applies; f.category=d.category; f.question=q; f.answer=a; f.scope=scope; f.attach=attach; f.updated=nowISO(); } }
+  else { list.push({id:uid("faq"),applies:applies,category:d.category,question:q,answer:a,scope:scope,attach:attach,created:nowISO(),updated:nowISO()}); }
   save("faqs",list); faqDraft=null; closeModal(); renderPage("faqs"); toast("FAQ saved.");
 }
 function faqDelete(id){
@@ -2928,24 +3018,104 @@ let editCtx={store:null,id:null};
 /* ---------- reusable attachment / link component (Drive-first, link-based) ---------- */
 const ATTACH_KINDS={drive:"Google Drive",link:"External link",doc:"Document",photo:"Photo"};
 let attachDraft={};
+/* ============================================================
+   TS ASSETS  |  Supabase Storage upload (Monday-style, direct + RLS)
+   Binary lives in a private bucket; the record keeps only a path.
+   Views resolve short-lived signed URLs on render (assetsHydrate).
+   Falls back to local base64 when sync is off (localStorage mode).
+   ============================================================ */
+const TS_BUCKET="ts-assets";
+function assetsReady(){ return !!(CLOUD.on && CLOUD.client && CLOUD.client.storage && CLOUD.session); }
+function assetSafeName(n){ return (String(n||"file").toLowerCase().replace(/[^a-z0-9.\-]+/g,"-").replace(/^-+|-+$/g,"").slice(-80))||"file"; }
+function assetKind(mime){ return /^image\//.test(mime||"")?"photo":"doc"; }
+// Step 1: signed upload URL. Step 2: binary PUT with progress. Returns {path,name,mime,size}.
+function assetUpload(file, prefix, onProgress){
+  return new Promise(function(resolve,reject){
+    if(!assetsReady()){ reject(new Error("offline")); return; }
+    const ext=(String(file.name).match(/\.[a-z0-9]+$/i)||[""])[0].toLowerCase();
+    const base=assetSafeName(String(file.name).replace(/\.[a-z0-9]+$/i,""));
+    const path=CLOUD.tenant+"/"+(prefix||"misc")+"/"+uid("as")+"/"+base+ext;
+    CLOUD.client.storage.from(TS_BUCKET).createSignedUploadUrl(path).then(function(res){
+      if(res.error||!res.data||!res.data.signedUrl){ reject(res.error||new Error("sign failed")); return; }
+      const xhr=new XMLHttpRequest();
+      xhr.open("PUT", res.data.signedUrl, true);
+      if(file.type) xhr.setRequestHeader("content-type", file.type);
+      xhr.upload.onprogress=function(e){ if(onProgress&&e.lengthComputable) onProgress(Math.round(e.loaded/e.total*100)); };
+      xhr.onload=function(){ (xhr.status>=200&&xhr.status<300)?resolve({path:path,name:file.name,mime:file.type||"",size:file.size}):reject(new Error("upload "+xhr.status)); };
+      xhr.onerror=function(){ reject(new Error("network")); };
+      xhr.send(file);
+    }).catch(reject);
+  });
+}
+// Step 3 for reads: swap data-apath placeholders for signed URLs, cached ~1h.
+const _assetUrl=new Map(); let _assetHydrateT=null;
+async function assetsHydrate(){
+  if(!assetsReady()) return;
+  const els=Array.prototype.slice.call(document.querySelectorAll("[data-apath]:not([data-ahyd])"));
+  if(!els.length) return;
+  const need=[]; els.forEach(function(el){ const p=el.getAttribute("data-apath"); if(p&&!_assetUrl.has(p)&&need.indexOf(p)<0) need.push(p); });
+  for(let i=0;i<need.length;i+=90){
+    const chunk=need.slice(i,i+90);
+    try{ const res=await CLOUD.client.storage.from(TS_BUCKET).createSignedUrls(chunk,3600);
+      if(res&&res.data) res.data.forEach(function(r){ if(r&&r.signedUrl) _assetUrl.set(r.path, r.signedUrl); }); }catch(e){}
+  }
+  els.forEach(function(el){ const p=el.getAttribute("data-apath"); const u=_assetUrl.get(p); if(!u) return;
+    if(el.tagName==="IMG") el.src=u; else el.setAttribute("href",u); el.setAttribute("data-ahyd","1"); });
+}
+function assetsHydrateSoon(){ clearTimeout(_assetHydrateT); _assetHydrateT=setTimeout(assetsHydrate,120); }
+if(typeof MutationObserver!=="undefined"){ try{ new MutationObserver(assetsHydrateSoon).observe(document.documentElement,{childList:true,subtree:true}); }catch(e){} }
+// Shared file intake: cloud upload with live progress + instant thumbnail, else local base64.
+function attachAddFiles(id, files){
+  if(!files||!files.length) return;
+  const arr=(attachDraft[id]=attachDraft[id]||[]);
+  files.forEach(function(f){
+    if(assetsReady()){
+      const item={id:uid("att"), kind:assetKind(f.type), caption:f.name, name:f.name, mime:f.type, uploading:true, pct:0};
+      if(/^image\//.test(f.type)){ try{ item.previewUrl=URL.createObjectURL(f); }catch(e){} }
+      arr.push(item); attachRerender(id);
+      assetUpload(f, "attach", function(pct){ item.pct=pct; const b=document.getElementById("apct_"+item.id); if(b) b.style.width=pct+"%"; })
+        .then(function(meta){ item.uploading=false; item.path=meta.path; item.mime=meta.mime; item.size=meta.size; delete item.pct; attachRerender(id); })
+        .catch(function(err){ item.uploading=false; item.error=true; attachRerender(id); toast("Upload failed: "+((err&&err.message)||"error")); });
+    } else {
+      if(!/^image\//.test(f.type)){ toast("Documents need sync on. Turn on sync, or paste a Google Drive link."); return; }
+      resizeImageFile_(f, 1280, function(dataUrl){ (attachDraft[id]=attachDraft[id]||[]).push({id:uid("att"),kind:"photo",url:dataUrl,caption:f.name}); attachRerender(id); });
+    }
+  });
+}
+function attachDragOver(ev){ ev.preventDefault(); ev.currentTarget.classList.add("dz-over"); }
+function attachDragLeave(ev){ ev.currentTarget.classList.remove("dz-over"); }
+function attachDrop(ev,id){ ev.preventDefault(); ev.currentTarget.classList.remove("dz-over"); const dt=ev.dataTransfer; attachAddFiles(id, dt&&dt.files?Array.prototype.slice.call(dt.files):[]); }
 function attachInit(id,val){ attachDraft[id]=(Array.isArray(val)?val:[]).map(a=>Object.assign({},a)); }
 function attachEditor(id){
   const arr=attachDraft[id]||[];
   const rows=arr.map((a,idx)=>{
-    const isData=a.kind==="photo"&&/^data:/.test(a.url||"");
-    return '<div class="atrow"><span class="atkind '+esc(a.kind)+'">'+esc(ATTACH_KINDS[a.kind]||a.kind)+'</span>'
-      +(isData?'<span class="atthumb"><img src="'+esc(a.url)+'" alt=""></span><span class="muted" style="font-size:11px;flex:1">uploaded image (local)</span>'
+    let mid;
+    if(a.uploading){
+      mid=(a.previewUrl?'<span class="atthumb"><img src="'+esc(a.previewUrl)+'" alt=""></span>':'')
+        +'<div class="grow" style="min-width:130px"><div class="muted" style="font-size:11px">'+esc(a.name||"file")+'</div><div class="apbar"><i id="apct_'+esc(a.id)+'" style="width:'+(a.pct||0)+'%"></i></div></div>';
+    } else if(a.error){
+      mid='<span class="muted" style="font-size:11px;flex:1;color:var(--alert)">'+esc(a.name||"upload failed")+'</span>';
+    } else if(a.path){
+      mid=(a.kind==="photo"?'<span class="atthumb"><img data-apath="'+esc(a.path)+'" alt=""></span>':'')
+        +'<span class="muted" style="font-size:11px;flex:1;min-width:90px">'+esc(a.name||"stored file")+'</span>'
+        +'<input class="inp" placeholder="Caption" value="'+esc(a.caption||"")+'" oninput="attachSet(\''+id+'\','+idx+',\'caption\',this.value)" style="max-width:140px">';
+    } else {
+      const isData=a.kind==="photo"&&/^data:/.test(a.url||"");
+      mid=(isData?'<span class="atthumb"><img src="'+esc(a.url)+'" alt=""></span><span class="muted" style="font-size:11px;flex:1">uploaded image (local)</span>'
              :'<input class="inp" placeholder="'+(a.kind==="drive"?"https://drive.google.com/...":"https://...")+'" value="'+esc(a.url||"")+'" oninput="attachSet(\''+id+'\','+idx+',\'url\',this.value)" style="flex:1;min-width:110px">')
-      +'<input class="inp" placeholder="Caption" value="'+esc(a.caption||"")+'" oninput="attachSet(\''+id+'\','+idx+',\'caption\',this.value)" style="max-width:140px">'
-      +'<button type="button" class="btn ghost sm" onclick="attachRemove(\''+id+'\','+idx+')">Remove</button></div>';
+        +'<input class="inp" placeholder="Caption" value="'+esc(a.caption||"")+'" oninput="attachSet(\''+id+'\','+idx+',\'caption\',this.value)" style="max-width:140px">';
+    }
+    return '<div class="atrow"><span class="atkind '+esc(a.kind||"link")+'">'+esc(ATTACH_KINDS[a.kind]||a.kind||"file")+'</span>'+mid
+      +(a.uploading?'':'<button type="button" class="btn ghost sm" onclick="attachRemove(\''+id+'\','+idx+')">Remove</button>')+'</div>';
   }).join("");
-  return '<div class="attach-list">'+rows+'</div>'
+  const dz='<div class="dropzone" ondragover="attachDragOver(event)" ondragleave="attachDragLeave(event)" ondrop="attachDrop(event,\''+id+'\')">'
+    +'<label style="cursor:pointer;display:block;margin:0"><b>Drop files</b> or click to upload'
+    +'<div class="muted" style="font-size:10.5px;margin-top:2px">'+(assetsReady()?"images and documents, stored in Supabase":"sync off, images saved locally")+'</div>'
+    +'<input type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" multiple style="display:none" onchange="attachUpload(\''+id+'\',this)"></label></div>';
+  return '<div class="attach-list">'+rows+'</div>'+dz
     +'<div class="attach-tools">'
     +'<button type="button" class="btn ghost sm" onclick="attachAdd(\''+id+'\',\'drive\')">+ Google Drive</button>'
     +'<button type="button" class="btn ghost sm" onclick="attachAdd(\''+id+'\',\'link\')">+ Link</button>'
-    +'<button type="button" class="btn ghost sm" onclick="attachAdd(\''+id+'\',\'doc\')">+ Document</button>'
-    +'<button type="button" class="btn ghost sm" onclick="attachAdd(\''+id+'\',\'photo\')">+ Photo URL</button>'
-    +'<label class="btn ghost sm" style="cursor:pointer;margin:0">Upload photo<input type="file" accept="image/*" style="display:none" onchange="attachUpload(\''+id+'\',this)"></label>'
     +'</div>';
 }
 function attachRerender(id){ const wrap=document.getElementById(id); if(wrap) wrap.innerHTML=attachEditor(id); }
@@ -2953,20 +3123,16 @@ function attachAdd(id,kind){ (attachDraft[id]=attachDraft[id]||[]).push({id:uid(
 function attachRemove(id,idx){ if(attachDraft[id]){ attachDraft[id].splice(idx,1); attachRerender(id); } }
 function attachSet(id,idx,field,v){ if(attachDraft[id]&&attachDraft[id][idx]) attachDraft[id][idx][field]=v; }
 function attachUpload(id,input){
-  const f=input.files&&input.files[0]; if(!f)return;
-  if(!/^image\//.test(f.type)){ toast("Only images upload directly. Use a Google Drive link for documents."); input.value=""; return; }
-  if(f.size>700*1024){ toast("Image over 700KB. Put it in Google Drive and paste the link, it keeps the hub fast and shareable."); input.value=""; return; }
-  const rd=new FileReader();
-  rd.onload=()=>{ (attachDraft[id]=attachDraft[id]||[]).push({id:uid("att"),kind:"photo",url:rd.result,caption:f.name}); attachRerender(id); };
-  rd.readAsDataURL(f); input.value="";
+  const files=input&&input.files?Array.prototype.slice.call(input.files):[];
+  input.value=""; attachAddFiles(id, files);
 }
-function attachClean(arr){ return (Array.isArray(arr)?arr:[]).filter(a=>a&&(a.url||"").trim()).map(a=>({id:a.id||uid("att"),kind:a.kind||"link",url:(a.url||"").trim(),caption:(a.caption||"").trim()})); }
+function attachClean(arr){ return (Array.isArray(arr)?arr:[]).filter(a=>a&&!a.uploading&&((a.url||"").trim()||a.path)).map(a=>{ const o={id:a.id||uid("att"),kind:a.kind||"link",caption:(a.caption||"").trim()}; if(a.path){ o.path=a.path; o.name=a.name||""; o.mime=a.mime||""; o.size=a.size||0; } else { o.url=(a.url||"").trim(); } return o; }); }
 function attachView(arr,emptyMsg){
   const items=Array.isArray(arr)?arr:[]; if(!items.length) return emptyMsg||"";
   const photos=items.filter(a=>a.kind==="photo"), links=items.filter(a=>a.kind!=="photo");
   let h="";
-  if(photos.length) h+='<div class="refgrid">'+photos.map(a=>'<a class="refph" href="'+esc(a.url)+'" target="_blank" rel="noopener"><img src="'+esc(a.url)+'" alt="'+esc(a.caption||"")+'" loading="lazy"><span>'+esc(a.caption||"photo")+'</span></a>').join("")+'</div>';
-  if(links.length) h+='<div class="atlinks">'+links.map(a=>{ const lbl=a.kind==="drive"?"Open in Google Drive":a.kind==="doc"?"Open document":"Open link"; return '<a class="atlink '+esc(a.kind)+'" href="'+esc(a.url)+'" target="_blank" rel="noopener"><b>'+esc(a.caption||lbl)+'</b><span>'+lbl+'</span></a>'; }).join("")+'</div>';
+  if(photos.length) h+='<div class="refgrid">'+photos.map(a=>{ const img=a.path?'<img data-apath="'+esc(a.path)+'" alt="'+esc(a.caption||"")+'" loading="lazy">':'<img src="'+esc(a.url)+'" alt="'+esc(a.caption||"")+'" loading="lazy">'; const ln=a.path?' data-apath="'+esc(a.path)+'"':' href="'+esc(a.url)+'"'; return '<a class="refph"'+ln+' target="_blank" rel="noopener">'+img+'<span>'+esc(a.caption||"photo")+'</span></a>'; }).join("")+'</div>';
+  if(links.length) h+='<div class="atlinks">'+links.map(a=>{ const lbl=a.kind==="drive"?"Open in Google Drive":a.kind==="doc"?"Open document":a.path?"Open file":"Open link"; const ln=a.path?' data-apath="'+esc(a.path)+'"':' href="'+esc(a.url)+'"'; return '<a class="atlink '+esc(a.kind)+'"'+ln+' target="_blank" rel="noopener"><b>'+esc(a.caption||a.name||lbl)+'</b><span>'+lbl+'</span></a>'; }).join("")+'</div>';
   return h;
 }
 function attachCount(arr){ return Array.isArray(arr)?arr.length:0; }
@@ -3180,7 +3346,7 @@ function viewConsumables(){
   return head("Owner recovery, month-end chase list","Consumables and restock",
       "Every restock we front gets logged against a property. The right rail is the month-end chase list, biggest balance first. Owner recovery is the point, not inventory.")
     +kpiRow
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">'
+    +'<div class="filterbar">'
       +'<input class="inp" style="max-width:200px" placeholder="Search items" value="'+esc(consumFilter.q)+'" oninput="consumFilter.q=this.value;renderPage(\'consum\')">'
       +'<select class="inp" style="max-width:220px" onchange="consumFilter.prop=this.value;renderPage(\'consum\')">'+propOpts+'</select>'
       +statusChips
@@ -3694,6 +3860,7 @@ function viewMyDay(){
       +card("Waiting on Isabell", appr.length?appr.map(m=>'<div class="rowline"><span class="chip warn">approval</span><div class="grow">'+esc(m.issue)+'<div class="muted mono" style="font-size:10px">'+esc(propName(m.property))+(m.cost?' &middot; '+esc(m.cost):'')+'</div></div></div>').join(""):'<div class="muted" style="font-size:12px">Nothing waiting on approval.</div>'
         +'<div class="sec-lbl" style="margin-top:14px">Overdue servicing</div>'+(servOd.length?servOd.map(s=>'<div class="rowline"><span class="chip alert">'+esc(s.type)+'</span><div class="grow mono" style="font-size:11px">'+esc(propName(s.property))+' &middot; due '+esc(s.nextDue)+'</div></div>').join(""):'<div class="muted" style="font-size:12px">None overdue.</div>'))
     +'</div>'
+    +upsMyDayCard()
     +'<div class="grid2" style="margin-top:16px">'+agendaCard()+activityCard()+'</div>'
     +'<div class="card" style="margin-top:16px"><div class="card-hd"><h3>Shift notes</h3></div><div class="card-bd"><textarea class="inp" style="min-height:110px" placeholder="Handover, reminders, what Isabell needs to know" oninput="save(\'dashNotes\',this.value)">'+esc(notes)+'</textarea></div></div>';
 }
@@ -3715,7 +3882,7 @@ function viewTeam(){
   }).join("");
   return head("Delegation","Team tasks",
       "The same task list grouped by who owns it. Assign a task an owner under Tasks and it shows up here, ready for the PH hotline team.")
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px"><span class="chip">'+tasks.length+' open</span><button class="btn sm" style="margin-left:auto" onclick="openForm(\'tasks\')">Add task</button></div>'
+    +'<div class="filterbar"><span class="chip">'+tasks.length+' open</span><button class="btn sm" style="margin-left:auto" onclick="openForm(\'tasks\')">Add task</button></div>'
     +(blocks?'<div class="grid2">'+blocks+'</div>':'<div class="card"><div class="empty"><h4>No open tasks</h4><p>Give a task an assignee under Tasks and it appears here grouped by person.</p></div></div>');
 }
 
@@ -3723,7 +3890,7 @@ function viewTeam(){
    SHEETS SYNC (one-way CSV export, n8n for two-way)
    ============================================================ */
 function viewSheets(){
-  const sets=[["properties","Properties"],["tasks","Tasks"],["dailyRoutines","Daily routines"],["maintenance","Maintenance"],["servicing","Servicing"],["reviews","Reviews"],["eodReports","EOD reports"]];
+  const sets=[["properties","Properties"],["tasks","Tasks"],["dailyRoutines","Daily routines"],["maintenance","Maintenance"],["servicing","Servicing"],["reviews","Reviews"],["eodReports","EOD reports"],["upsells","Upsells"]];
   return head("Reporting","Sheets sync",
       "Export any table to CSV and drop it straight into Google Sheets. This is one way for now.")
     +'<div class="card"><div class="card-hd"><h3>Export to CSV</h3></div><div class="card-bd"><div style="display:flex;gap:9px;flex-wrap:wrap">'
@@ -3733,7 +3900,7 @@ function viewSheets(){
 function csvExport(store){
   const rows=db(store,[]); if(!rows.length){ toast("Nothing to export."); return; }
   const cols=[...new Set(rows.flatMap(r=>Object.keys(r)))];
-  const cell=v=>{ v=(v==null)?"":Array.isArray(v)?v.join("; "):String(v); return '"'+v.replace(/"/g,'""')+'"'; };
+  const cell=v=>{ v=(v==null)?"":Array.isArray(v)?v.join("; "):(typeof v==="object"?JSON.stringify(v):String(v)); return '"'+v.replace(/"/g,'""')+'"'; };
   const csv=[cols.join(",")].concat(rows.map(r=>cols.map(c=>cell(r[c])).join(","))).join("\n");
   const b=new Blob([csv],{type:"text/csv"}); const a=document.createElement("a");
   a.href=URL.createObjectURL(b); a.download="ts-"+store+".csv"; a.click(); toast(store+" exported.");
@@ -3758,7 +3925,7 @@ function viewEOD(){
   const rows=hist.map(e=>'<tr><td class="mono">'+esc(e.date)+'</td><td>'+esc(e.va||"-")+'</td><td class="mono">'+(e.pct!=null?e.pct+"%":"-")+'</td><td>'+esc(e.wins||"-")+'</td><td>'+esc(e.blockers||"-")+'</td><td class="rowact"><button class="btn ghost sm" onclick="eodReopen(\''+e.id+'\')">View</button> <button class="btn ghost sm" onclick="delRow(\'eodReports\',\''+e.id+'\')">Del</button></td></tr>').join("");
   return head("End of day","EOD report",
       "Pick the VA and the day. The report builds itself from the daily checklist and one-off tasks. Copy it, or send it as a Sheet or a Doc.")
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">'
+    +'<div class="filterbar">'
       +'<select class="inp" style="max-width:150px" onchange="eodSetVA(this.value)">'+vaOpts+'</select>'
       +'<button class="btn ghost sm" onclick="eodShiftDate(-1)">Prev</button>'
       +'<input class="inp" type="date" style="max-width:170px" value="'+esc(eodDate)+'" onchange="eodSetDate(this.value)">'
@@ -3974,6 +4141,7 @@ function calItem(kind,id){
   if(kind==="serv"){ const s=db("servicing",[]).find(x=>x.id===id); if(!s)return null; return {title:(s.type||"Servicing")+": "+propName(s.property),date:s.nextDue,details:(s.vendor||"")+" "+(s.notes||"")}; }
   if(kind==="maint"){ const m=db("maintenance",[]).find(x=>x.id===id); if(!m)return null; return {title:(m.trade||"Maintenance")+": "+(m.issue||"")+(m.property?" ["+propName(m.property)+"]":""),date:m.due,details:(m.contractor||"")+" "+(m.notes||"")}; }
   if(kind==="claim"){ const c=db("shieldClaims",[]).find(x=>x.id===id); if(!c)return null; return {title:"Guesty Shield claim deadline: "+(c.reservationCode||"claim"),date:claimDeadline(c),details:"Submit within 15 days of check-out ("+(c.checkOut||"")+"). "+propName(c.listing)}; }
+  if(kind==="upsell"){ const r=upsById(id); if(!r)return null; const d=upsDue(r); return {title:"Upsell: "+upsName(r)+" ("+r.guest+")",date:d.date,details:upsCalDesc(r).replace(/\n/g," | ")}; }
   return null;
 }
 function calBtns(kind,id){ return '<span class="calbtns"><button class="calbtn" onclick="event.stopPropagation();gcalOpen(\''+kind+'\',\''+id+'\')" title="Add to Google Calendar">Cal</button><button class="calbtn" onclick="event.stopPropagation();icsDownload(\''+kind+'\',\''+id+'\')" title="Download .ics">ics</button></span>'; }
@@ -3987,6 +4155,7 @@ function agendaItems(){
   const items=[];
   db("tasks",[]).filter(t=>t.status!=="done"&&t.due).forEach(t=>items.push({date:t.due,kind:"task",id:t.id,label:t.title,sub:propName(t.property),tone:t.priority==="P1"?"alert":t.priority==="P2"?"warn":""}));
   db("servicing",[]).filter(s=>s.status!=="Done"&&s.nextDue).forEach(s=>items.push({date:s.nextDue,kind:"serv",id:s.id,label:(s.type||"Servicing"),sub:propName(s.property),tone:"info"}));
+  try{ db("upsells",[]).filter(upsOpen).forEach(r=>{ const d=upsDue(r).date; if(d) items.push({date:d,kind:"upsell",id:r.id,label:"Upsell: "+upsName(r),sub:(r.guest||"")+" / "+upsPropLabel(r),tone:"info"}); }); }catch(e){}
   return items.sort((a,b)=>a.date.localeCompare(b.date));
 }
 function agendaBucket(ymd){ const today=todayAU(); if(ymd<today)return"Overdue"; if(ymd===today)return"Today"; if(ymd===dateAdd(today,1))return"Tomorrow"; if(ymd<=dateAdd(today,7))return"This week"; return"Upcoming"; }
@@ -4045,7 +4214,7 @@ function viewDaily(){
   return head("Cadence, renews daily","Daily tasks",
       "Regular routines for each VA. Tick them off through the shift. The list resets every day on Cairns time, and yesterday stays on record.")
     +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+vaBtn("Marlon","Marlon")+vaBtn("Harold","Harold")+vaBtn("Weekend","Weekend")+vaBtn("All","All")+'</div>'
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">'
+    +'<div class="filterbar">'
       +'<button class="btn ghost sm" onclick="dailyDate=dateAdd(dailyDate,-1);renderPage(\'daily\')">Prev</button>'
       +'<input class="inp" type="date" style="max-width:170px" value="'+esc(date)+'" onchange="dailyDate=this.value||todayAU();renderPage(\'daily\')">'
       +'<button class="btn ghost sm" onclick="dailyDate=dateAdd(dailyDate,1);renderPage(\'daily\')">Next</button>'
@@ -4295,7 +4464,7 @@ function viewGroups(){
       +'<td><button class="btn ghost sm" onclick="grpUnitDel(\''+g.id+'\',\''+u.id+'\')">Del</button></td></tr>').join("");
     const nights=(g.units||[]).reduce((a,x)=>a+(parseFloat(x.nights)||0),0);
     return '<div class="card" style="margin-bottom:16px"><div class="card-bd">'
-      +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">'
+      +'<div class="filterbar">'
         +'<input class="inp" value="'+esc(g.name||"")+'" onchange="grpSet(\''+g.id+'\',\'name\',this.value)" style="max-width:320px;font-weight:600">'
         +'<span class="chip">'+(g.units||[]).length+' units</span><span class="chip">'+nights+' nights</span>'
         +'<span style="margin-left:auto"></span><button class="btn ghost sm" onclick="grpDel(\''+g.id+'\')">Delete group</button></div>'
@@ -4478,7 +4647,7 @@ function viewNotif(){
   const seg='<div style="display:flex;gap:6px;margin-bottom:12px"><button class="filterbtn '+(!all?"on":"")+'" onclick="notifSetScope(\'me\')">For me ('+unread+')</button><button class="filterbtn '+(all?"on":"")+'" onclick="notifSetScope(\'all\')">All activity ('+db("notifications",[]).length+')</button></div>';
   return head("Overview","Notifications","Assignments and changes across the hub. Type @name in a task title or notes to notify a teammate, e.g. @harold pest control visits Tuesday. You are never notified about your own actions. Use All activity to see everything the hub has generated.")
     +notifDiag()+seg
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px"><span class="chip '+(unread?"warn":"ok")+'">'+unread+' unread for you</span><span style="margin-left:auto"></span>'
+    +'<div class="filterbar"><span class="chip '+(unread?"warn":"ok")+'">'+unread+' unread for you</span><span style="margin-left:auto"></span>'
       +(unread?'<button class="btn ghost sm" onclick="notifMarkAll()">Mark all read</button>':'')
       +'<button class="btn ghost sm" onclick="notifClearRead()">Clear read</button></div>'
     +(rows||'<div class="card"><div class="empty"><h4>'+(all?"Nothing yet":"Nothing for you yet")+'</h4><p>'+(all?"Assign a task or change a status and it appears here.":"Notes about your own actions go to the others involved. Switch to All activity to see everything.")+'</p></div></div>');
@@ -4557,13 +4726,43 @@ function midDelStay(){ confirmModal("Delete this stay and all its cleans?",funct
 /* ============================================================
    PER-PROPERTY PHOTOS AND FAQS
    ============================================================ */
+function resizeImageFile_(file,maxDim,cb){
+  const reader=new FileReader();
+  reader.onload=function(e){ const img=new Image();
+    img.onload=function(){ let w=img.width,h=img.height;
+      if(w>h){ if(w>maxDim){ h=Math.round(h*maxDim/w); w=maxDim; } } else { if(h>maxDim){ w=Math.round(w*maxDim/h); h=maxDim; } }
+      const c=document.createElement("canvas"); c.width=w; c.height=h; c.getContext("2d").drawImage(img,0,0,w,h);
+      try{ cb(c.toDataURL("image/jpeg",0.72)); }catch(err){ cb(e.target.result); } };
+    img.onerror=function(){ cb(e.target.result); }; img.src=e.target.result; };
+  reader.readAsDataURL(file);
+}
 function propAddPhoto(id){ const p=propById(id); if(!p)return;
-  openModal("Add reference photo",
-    '<div class="field"><label>Image URL</label><input class="inp" id="php_url" placeholder="https://..."></div>'
-    +'<div class="field"><label>Caption</label><input class="inp" id="php_cap" placeholder="e.g. Breaker box location"></div>'
-    +'<div class="note">Paste a link to an image (Google Drive share link, Photos link, or any image URL).</div>',
-    '<button class="btn ghost" onclick="closeModal();openProp(\''+id+'\')">Cancel</button><button class="btn" onclick="propAddPhotoSave(\''+id+'\')">Add</button>'); }
-function propAddPhotoSave(id){ const url=val("php_url").trim(); if(!url){ toast("Add an image URL."); return; } const list=db("properties",[]); const p=list.find(x=>x.id===id); if(!p)return; p.refPhotos=Array.isArray(p.refPhotos)?p.refPhotos:[]; p.refPhotos.push({url:url,caption:val("php_cap").trim()}); p.updated=nowISO(); save("properties",list); closeModal(); openProp(id); }
+  openModal("Add photos",
+    '<div class="field"><label>Upload photos from your device</label><input class="inp" type="file" id="php_file" accept="image/*" multiple></div>'
+    +'<div class="field"><label>Caption (applied to the ones you add now)</label><input class="inp" id="php_cap" placeholder="e.g. Breaker box location"></div>'
+    +'<div class="field"><label>...or paste an image URL instead</label><input class="inp" id="php_url" placeholder="https://..."></div>'
+    +'<div class="note">Pick one or several photos. They are resized automatically before saving.</div>',
+    '<button class="btn ghost" onclick="closeModal();openProp(\''+id+'\')">Cancel</button><button class="btn" id="php_add" onclick="propAddPhotoSave(\''+id+'\')">Add</button>'); }
+function propAddPhotoSave(id){
+  const fileEl=document.getElementById("php_file"); const cap=(val("php_cap")||"").trim(); const url=(val("php_url")||"").trim();
+  const files=(fileEl&&fileEl.files)?Array.prototype.slice.call(fileEl.files):[];
+  if(!files.length && !url){ toast("Pick a photo or paste a URL."); return; }
+  const list=db("properties",[]); const p=list.find(x=>x.id===id); if(!p)return; p.refPhotos=Array.isArray(p.refPhotos)?p.refPhotos:[];
+  if(url) p.refPhotos.push({url:url,caption:cap});
+  const btn=document.getElementById("php_add"); if(btn){ btn.disabled=true; btn.textContent="Adding..."; }
+  const done=function(){ p.updated=nowISO(); save("properties",list); closeModal(); openProp(id); };
+  if(!files.length){ done(); return; }
+  if(assetsReady()){
+    let pending=files.length, failed=0;
+    files.forEach(function(f){ assetUpload(f, "property/"+id, function(pct){ if(btn) btn.textContent="Uploading "+pct+"%"; })
+      .then(function(meta){ p.refPhotos.push({path:meta.path,caption:cap,name:meta.name}); })
+      .catch(function(){ failed++; })
+      .finally(function(){ pending--; if(pending===0){ if(failed) toast(failed+" upload(s) failed."); done(); } }); });
+  } else {
+    let pending=files.length;
+    files.forEach(function(f){ resizeImageFile_(f,1280,function(dataUrl){ p.refPhotos.push({url:dataUrl,caption:cap}); pending--; if(pending===0){ done(); } }); });
+  }
+}
 function propRemovePhoto(id,idx){ const list=db("properties",[]); const p=list.find(x=>x.id===id); if(p&&Array.isArray(p.refPhotos)){ p.refPhotos.splice(idx,1); p.updated=nowISO(); save("properties",list); } closeModal(); openProp(id); }
 function propAddFaq(id){ const p=propById(id); if(!p)return;
   openModal("Add FAQ for "+esc(p.nickname||"property"),
@@ -4572,6 +4771,431 @@ function propAddFaq(id){ const p=propById(id); if(!p)return;
     '<button class="btn ghost" onclick="closeModal();openProp(\''+id+'\')">Cancel</button><button class="btn" onclick="propAddFaqSave(\''+id+'\')">Add</button>'); }
 function propAddFaqSave(id){ const q=val("pfq_q").trim(); if(!q){ toast("Add a question."); return; } const list=db("properties",[]); const p=list.find(x=>x.id===id); if(!p)return; p.faqs=Array.isArray(p.faqs)?p.faqs:[]; p.faqs.push({id:uid("pfaq"),q:q,a:val("pfq_a").trim()}); p.updated=nowISO(); save("properties",list); closeModal(); openProp(id); }
 function propRemoveFaq(id,fid){ const list=db("properties",[]); const p=list.find(x=>x.id===id); if(p&&Array.isArray(p.faqs)){ p.faqs=p.faqs.filter(f=>f.id!==fid); p.updated=nowISO(); save("properties",list); } closeModal(); openProp(id); }
+
+/* ============================================================
+   UPSELLS  (guest add-ons, SOP tracker and reminders)
+   SOP: Requested, Paid, Approved, Coordinated with housekeeping, Completed.
+   Stores: upsells (one record per guest request), upsellCatalog (editable price list).
+   Reminders count back from the date needed using the lead days in the catalog.
+   No demo data is seeded. Everything here is what you log.
+   ============================================================ */
+const UPS_STEPS=[["requested","Requested","Requested"],["paid","Paid","Paid"],["approved","Approved","Approved"],["coordinated","Coordinated with housekeeping","Housekeeping"],["completed","Completed","Completed"]];
+const UPS_WAIT={requested:["Requested","info"],paid:["Unpaid","alert"],approved:["Awaiting approval","warn"],coordinated:["Needs housekeeping","info"],completed:["To complete","info"]};
+const UPS_ACTION={requested:"Mark requested",paid:"Mark paid",approved:"Mark approved",coordinated:"Mark housekeeping coordinated",completed:"Mark completed"};
+const UPS_VIA=["Guest portal","Message (Guesty or channel)","Phone or email","Other"];
+/* Mirrors the guest portal service listings. Lead days are a starting point, edit them in Manage catalog. */
+const UPS_DEFAULT_CATALOG=[
+  {id:"cat_early",name:"Early check-in",kind:"early",price:50,lead:2,
+    options:[{k:"noon",label:"Early check-in",time:"12:00 PM",price:50},{k:"bird",label:"Early Bird Check-In",time:"8:00 AM",price:125}],
+    offer:"Guest asks for an earlier check-in and gives a preferred arrival time. Not guaranteed, it depends on cleaning schedules and departing guests. A $50 authorisation hold is placed when the guest submits the request, and they are only charged if it is approved."},
+  {id:"cat_late",name:"Late check-out",kind:"late",price:50,lead:2,
+    options:[{k:"noon",label:"Check-out till 12 pm",time:"12:00 PM",price:50},{k:"six",label:"Late check out",time:"6:00 PM",price:125}],
+    offer:"Guest asks for a later check-out and gives a preferred departure time. Not guaranteed, it depends on availability, the cleaning schedule and incoming guests. A $50 authorisation hold is placed when the guest submits the request, and they are only charged if it is approved."},
+  {id:"cat_birthday",name:"Birthday package",kind:"item",price:179,lead:3,options:[],
+    offer:"Cake from the partner local bakery with a personal note on the cake, complimentary sparkling wine, birthday balloons and styling. Guests are asked to pre-book at least 3 days before."},
+  {id:"cat_romance",name:"Romance package",kind:"item",price:129,lead:2,options:[],
+    offer:"Rose petals and romantic styling, ambient lighting, chocolates or gourmet treats, fresh flowers on arrival and a complimentary bottle of sparkling wine."},
+  {id:"cat_highchair",name:"High chair",kind:"item",price:0,lead:2,options:[],
+    offer:"Complimentary, provided based on availability."},
+  {id:"cat_cot",name:"Travel cot",kind:"item",price:25,lead:2,options:[],
+    offer:"Delivered, fully set up and ready before arrival. Firm safety-approved insert with a fresh fitted sheet on top."},
+  {id:"cat_towels",name:"Towel request",kind:"item",price:5,lead:2,qty:true,options:[],
+    offer:"Complete set of clean bath and hand towels delivered to the accommodation on the chosen date. Priced per towel."}
+];
+let upsState={view:"queue",status:"open",q:"",open:{},calMonth:"",heroOpen:false};
+let upsCtx={id:null,manualPrice:false,manualRemind:false,cat:[]};
+
+/* ---------- data helpers ---------- */
+function upsList(){ return db("upsells",[])||[]; }
+function upsSaveList(list){ save("upsells",list); }
+function upsById(id){ return upsList().find(r=>r.id===id)||null; }
+function upsCatalog(){ const c=db("upsellCatalog",null); return (Array.isArray(c)&&c.length)?c:clone(UPS_DEFAULT_CATALOG); }
+function upsItemByCat(cat,id){ return cat.find(x=>x.id===id)||null; }
+function upsFmt(d){ if(!d) return "no date"; try{ return new Date(d+"T00:00:00").toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"}); }catch(e){ return d; } }
+function upsPropLabel(r){ return r.propertyId?propName(r.propertyId):(r.propertyText||"No property set"); }
+function upsResolveProp(txt){ const t=String(txt||"").trim().toLowerCase(); if(!t) return ""; const hit=props().find(p=>String(p.nickname||"").trim().toLowerCase()===t); return hit?hit.id:""; }
+function upsTotal(r){ return (Number(r.price)||0)*(Number(r.qty)||1); }
+function upsName(r){ let n=r.itemName||"Upsell"; if(r.time) n+=", "+r.time; return n; }
+function upsMoney(r){ const t=upsTotal(r); return t===0?"Complimentary":money(t); }
+
+/* ---------- SOP state ---------- */
+function upsSteps(r){ return UPS_STEPS.filter(s=>!(s[0]==="paid"&&upsTotal(r)===0)); }
+function upsDone(r,k){ return !!(r.steps&&r.steps[k]); }
+function upsNext(r){ const s=upsSteps(r).find(x=>!upsDone(r,x[0])); return s?s[0]:null; }
+function upsOpen(r){ return !r.cancelled && upsNext(r)!==null; }
+function upsStatus(r){
+  if(r.cancelled) return {key:"cancelled",label:"Declined or cancelled",tone:"mut"};
+  const n=upsNext(r); if(!n) return {key:"done",label:"Completed",tone:"ok"};
+  const w=UPS_WAIT[n]; return {key:n,label:w[0],tone:w[1]};
+}
+
+/* ---------- dates and reminders ---------- */
+function upsTarget(r){ if(r.kind==="early") return r.in||""; if(r.kind==="late") return r.out||""; return r.serviceDate||r.in||""; }
+function upsDue(r){ if(upsDone(r,"coordinated")) return {date:upsTarget(r),what:"Complete on"}; return {date:r.remindOn||"",what:"Coordinate by"}; }
+function upsCalcRemind(kind,inD,outD,svc,lead){
+  const target=kind==="early"?inD:kind==="late"?outD:(svc||inD); if(!target) return "";
+  const today=todayAU(); let d=dateAdd(target,-(Number(lead)||0)); if(d<today && target>=today) d=today; return d;
+}
+function upsUrgency(r){
+  if(!upsOpen(r)) return null;
+  const today=todayAU(); const t=upsTarget(r); const d=upsDue(r).date;
+  if(t&&t<today) return {key:"past",label:"Date has passed",tone:"alert"};
+  if(!d) return {key:"nodate",label:"No date set",tone:"mut"};
+  if(d<today) return {key:"overdue",label:"Overdue",tone:"alert"};
+  if(d===today) return {key:"today",label:"Due today",tone:"warn"};
+  if(d===dateAdd(today,1)) return {key:"tomorrow",label:"Tomorrow",tone:"info"};
+  if(d<=dateAdd(today,7)) return {key:"week",label:"This week",tone:"info"};
+  return {key:"later",label:"Later",tone:"mut"};
+}
+function upsOpenCount(){ return upsList().filter(upsOpen).length; }
+function upsAttnList(){ return upsList().filter(upsOpen).filter(r=>{ const u=upsUrgency(r); return u&&(u.key==="past"||u.key==="overdue"||u.key==="today"); }); }
+function upsAttnCount(){ return upsAttnList().length; }
+
+/* ---------- step actions ---------- */
+function upsRerender(){ const p=document.getElementById("page"); const y=p?p.scrollTop:0; renderPage("upsells"); const p2=document.getElementById("page"); if(p2) p2.scrollTop=y; }
+function upsToggleStep(id,k){
+  if(!requireEdit("upsells")) return;
+  const list=upsList(); const r=list.find(x=>x.id===id); if(!r) return;
+  r.steps=r.steps||{}; let on;
+  if(r.steps[k]){ delete r.steps[k]; on=false; } else { r.steps[k]={at:nowISO(),by:currentUserName()}; on=true; }
+  r.updated=nowISO(); upsSaveList(list); upsRerender();
+  const msg={paid:"Marked paid.",approved:"Approved. Next, send the details to Julie.",coordinated:"Housekeeping coordinated.",completed:"Completed and closed off.",requested:"Marked requested."};
+  toast(on?(msg[k]||"Updated."):"Step reopened.");
+}
+function upsAdvance(id){ const r=upsById(id); if(!r) return; const n=upsNext(r); if(n) upsToggleStep(id,n); }
+function upsToggle(id){ upsState.open[id]=!upsState.open[id]; upsRerender(); }
+function upsSnooze(id){
+  const list=upsList(); const r=list.find(x=>x.id===id); if(!r) return;
+  const base=(r.remindOn&&r.remindOn>todayAU())?r.remindOn:todayAU();
+  r.remindOn=dateAdd(base,1); r.updated=nowISO(); upsSaveList(list); upsRerender(); toast("Reminder moved to "+upsFmt(r.remindOn)+".");
+}
+function upsCancel(id){ confirmModal("Mark this upsell as declined or cancelled? It drops off the reminders. You can reopen it later.",function(){ const list=upsList(); const r=list.find(x=>x.id===id); if(!r) return; r.cancelled=true; r.updated=nowISO(); upsSaveList(list); logAct("edit","upsells",(r.title||"Upsell")+" declined"); upsRerender(); toast("Marked declined or cancelled."); }); }
+function upsReopen(id){ const list=upsList(); const r=list.find(x=>x.id===id); if(!r) return; r.cancelled=false; r.updated=nowISO(); upsSaveList(list); upsRerender(); toast("Reopened."); }
+function upsDelete(id){ confirmModal("Delete this upsell? You can undo it from Recent activity.",function(){ doDel("upsells",id); }); }
+
+/* ---------- Julie hand-off ---------- */
+function upsMessage(r){
+  const L=["Hi Julie, upsell to set up:",""];
+  L.push(upsName(r)+((Number(r.qty)||1)>1?" x"+r.qty:""));
+  L.push("Property: "+upsPropLabel(r)); L.push("Guest: "+r.guest);
+  if(r.in||r.out) L.push("Stay: "+upsFmt(r.in)+" to "+upsFmt(r.out));
+  if(r.kind==="early"&&r.requestedTime) L.push("Guest would like to arrive from: "+r.requestedTime);
+  else if(r.kind==="late"&&r.requestedTime) L.push("Guest would like to leave by: "+r.requestedTime);
+  else if(upsTarget(r)) L.push("Needed on: "+upsFmt(upsTarget(r)));
+  if(r.details) L.push("Guest notes: "+r.details);
+  L.push("Approved: "+(upsDone(r,"approved")?"yes":"not yet"));
+  L.push(""); L.push("Can you let me know once housekeeping is sorted? Thanks!");
+  return L.join("\n");
+}
+function upsCopyMsg(id){ const r=upsById(id); if(!r) return; copyText(upsMessage(r),"Message copied, ready to paste into WhatsApp."); }
+function upsNotifyJulie(id){
+  const list=upsList(); const r=list.find(x=>x.id===id); if(!r) return;
+  const t=upsTarget(r);
+  notifPush("Julie","Upsell to set up: "+upsName(r)+" for "+r.guest+" at "+upsPropLabel(r)+(t?", needed "+upsFmt(t):""),{goto:"upsells"});
+  r.hkNotified=nowISO(); r.hkNotifiedBy=currentUserName(); r.updated=nowISO(); upsSaveList(list); upsRerender();
+  toast("Julie notified in the hub. Copy the message too if she is on WhatsApp.");
+}
+
+/* ---------- calendar reminders ---------- */
+function upsCalDesc(r){ const d=upsDue(r); return [d.what+" "+upsFmt(d.date),"Guest: "+r.guest,"Property: "+upsPropLabel(r),"Stay: "+upsFmt(r.in)+" to "+upsFmt(r.out),r.details?"Notes: "+r.details:""].filter(Boolean).join("\n"); }
+function upsGcal(id){ const r=upsById(id); if(!r) return; const d=upsDue(r); if(!d.date){ toast("Add a reminder date first."); return; } window.open(gcalUrl("Upsell: "+upsName(r)+" ("+r.guest+")",d.date,upsCalDesc(r)),"_blank"); }
+function upsIcsBlock(r){
+  const d=upsDue(r); if(!d.date) return "";
+  const x=t=>String(t||"").replace(/\\/g,"\\\\").replace(/([,;])/g,"\\$1").replace(/\r?\n/g,"\\n");
+  const stamp=new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,"");
+  return ["BEGIN:VEVENT","UID:"+r.id+"-upsell@tropicalstays","DTSTAMP:"+stamp,"DTSTART;VALUE=DATE:"+d.date.replace(/-/g,""),"DTEND;VALUE=DATE:"+dateAdd(d.date,1).replace(/-/g,""),
+    "SUMMARY:"+x("Upsell: "+upsName(r)+" ("+r.guest+")"),"DESCRIPTION:"+x(upsCalDesc(r)),
+    "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+x("Upsell reminder"),"TRIGGER:PT9H","END:VALARM","END:VEVENT"].join("\r\n");
+}
+function upsIcsFile(blocks,name,calName){
+  const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Tropical Stays//Ops Hub//EN"].concat(calName?["X-WR-CALNAME:"+calName]:[]).concat(blocks).concat(["END:VCALENDAR"]).join("\r\n");
+  const b=new Blob([ics],{type:"text/calendar"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=name; a.click();
+}
+function upsIcs(id){ const r=upsById(id); if(!r) return; const blk=upsIcsBlock(r); if(!blk){ toast("Add a reminder date first."); return; } upsIcsFile([blk],"upsell-"+String(r.guest||"guest").replace(/[^a-z0-9]+/gi,"-").toLowerCase()+".ics"); toast("Calendar file downloaded. It alerts at 9am on the day."); }
+function upsIcsAll(){ const blocks=upsList().filter(upsOpen).map(upsIcsBlock).filter(Boolean); if(!blocks.length){ toast("No open upsells with a reminder date."); return; } upsIcsFile(blocks,"tropical-stays-upsell-reminders.ics","Tropical Stays Upsells"); toast(blocks.length+" reminders exported. Import into your phone calendar."); }
+
+/* ---------- catalog editor ---------- */
+let upsCatDraft=null;
+function upsCatalogEdit(){ upsCatDraft=clone(upsCatalog()); upsCatRender(); }
+function upsCatSync(){
+  if(!upsCatDraft) return;
+  upsCatDraft.forEach((it,i)=>{
+    const n=document.getElementById("cat_n_"+i); if(!n) return;
+    it.name=n.value.trim(); it.price=Number(val("cat_p_"+i))||0; it.lead=Math.max(0,parseInt(val("cat_l_"+i),10)||0); it.offer=val("cat_o_"+i).trim();
+    (it.options||[]).forEach((o,j)=>{ o.label=val("cat_ol_"+i+"_"+j).trim(); o.time=val("cat_ot_"+i+"_"+j).trim(); o.price=Number(val("cat_op_"+i+"_"+j))||0; });
+  });
+}
+function upsCatRender(){
+  const body='<div class="note" style="margin:0 0 12px">These mirror the guest portal. Only change a price here after it has changed in the portal, and check any price change with Isabell first. Reminder days is how many days before the date needed the nudge lands.</div>'
+    +upsCatDraft.map((it,i)=>{
+      const opts=(it.options||[]).map((o,j)=>'<div class="field"><label>Option '+(j+1)+'</label><input class="inp" id="cat_ol_'+i+'_'+j+'" value="'+esc(o.label)+'"></div>'
+        +'<div class="row2"><div class="field"><label>Time</label><input class="inp" id="cat_ot_'+i+'_'+j+'" value="'+esc(o.time)+'"></div><div class="field"><label>Price (AUD)</label><input class="inp" type="number" min="0" step="0.01" id="cat_op_'+i+'_'+j+'" value="'+esc(o.price)+'"></div></div>').join("");
+      return '<div class="cleancard">'
+        +'<div class="row2"><div class="field"><label>Name</label><input class="inp" id="cat_n_'+i+'" value="'+esc(it.name)+'"></div>'
+        +'<div class="field"><label>'+(it.qty?"Price each (AUD)":"Price (AUD)")+'</label><input class="inp" type="number" min="0" step="0.01" id="cat_p_'+i+'" value="'+esc(it.price)+'"></div></div>'
+        +opts
+        +'<div class="row2"><div class="field"><label>Reminder days before</label><input class="inp" type="number" min="0" max="30" id="cat_l_'+i+'" value="'+esc(it.lead)+'"></div>'
+        +'<div class="field" style="display:flex;align-items:flex-end"><button class="btn danger sm" onclick="upsCatRemove('+i+')">Remove from catalog</button></div></div>'
+        +'<div class="field" style="margin-bottom:0"><label>What the guest is told (shows on the card so housekeeping knows what to prep)</label><textarea class="inp" id="cat_o_'+i+'" style="min-height:70px">'+esc(it.offer||"")+'</textarea></div>'
+        +'</div>';
+    }).join("")
+    +'<button class="btn ghost" onclick="upsCatAdd()">Add an upsell to the catalog</button>';
+  openModal("Manage upsell catalog",body,'<button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="upsCatSave()">Save catalog</button>');
+}
+function upsCatAdd(){ upsCatSync(); upsCatDraft.push({id:uid("cat"),name:"New upsell",kind:"item",price:0,lead:2,options:[],offer:""}); upsCatRender(); const m=document.getElementById("modalBody"); if(m) m.scrollTop=m.scrollHeight; }
+function upsCatRemove(i){ upsCatSync(); upsCatDraft.splice(i,1); upsCatRender(); }
+function upsCatSave(){
+  upsCatSync();
+  if(upsCatDraft.some(it=>!it.name)){ toast("Every upsell needs a name."); return; }
+  if(!upsCatDraft.length){ toast("Keep at least one upsell in the catalog."); return; }
+  save("upsellCatalog",upsCatDraft); upsCatDraft=null; closeModal(); toast("Catalog saved."); renderPage("upsells");
+}
+
+/* ---------- add / edit form ---------- */
+function upsEl(id){ return document.getElementById(id); }
+function upsForm(id,prefill){
+  if(!requireEdit("upsells")) return;
+  const r=id?(upsById(id)||{}):(prefill||{});
+  const cat=upsCatalog();
+  if(r.itemId && !upsItemByCat(cat,r.itemId)) cat.push({id:r.itemId,name:r.itemName||"Upsell",kind:r.kind||"item",price:Number(r.price)||0,lead:2,options:[],offer:""});
+  upsCtx={id:id||null,manualPrice:!!id,manualRemind:false,cat:cat};
+  const it=upsItemByCat(cat,r.itemId)||cat[0];
+  const opts=it.options||[]; const optSel=opts.find(o=>o.k===r.optionKey)||opts[0]||null;
+  const priceVal=(id&&r.price!=null)?r.price:(optSel?optSel.price:it.price);
+  const propVal=r.propertyId?propName(r.propertyId):(r.propertyText||"");
+  const propList=props().slice().sort((a,b)=>String(a.nickname||"").localeCompare(String(b.nickname||""))).map(p=>'<option value="'+esc(p.nickname||"")+'"></option>').join("");
+  const body=
+    '<div class="field"><label>Upsell</label><select class="inp" id="up_item" onchange="upsFormSync(\'item\')">'+cat.map(c=>'<option value="'+esc(c.id)+'"'+(c.id===it.id?" selected":"")+'>'+esc(c.name)+'</option>').join("")+'</select></div>'
+    +'<div class="field" id="up_optwrap"><label>Option</label><select class="inp" id="up_opt" onchange="upsFormSync(\'opt\')">'+opts.map(o=>'<option value="'+esc(o.k)+'"'+(optSel&&o.k===optSel.k?" selected":"")+'>'+esc(o.label+" · "+o.time+" · "+money(o.price))+'</option>').join("")+'</select></div>'
+    +'<div class="note" id="up_offer" style="margin:0 0 12px;display:none"></div>'
+    +'<div class="row2"><div class="field"><label>Guest name</label><input class="inp" id="up_guest" autocomplete="off" value="'+esc(r.guest||"")+'"></div>'
+    +'<div class="field"><label>Reservation code (optional)</label><input class="inp" id="up_code" autocomplete="off" value="'+esc(r.code||"")+'"></div></div>'
+    +'<div class="field"><label>Property</label><input class="inp" id="up_prop" list="up_props" autocomplete="off" placeholder="Start typing the property nickname" value="'+esc(propVal)+'"><datalist id="up_props">'+propList+'</datalist></div>'
+    +'<div class="row2"><div class="field"><label>Check-in</label><input class="inp" type="date" id="up_in" value="'+esc(r.in||"")+'" onchange="upsFormSync(\'date\')"></div>'
+    +'<div class="field"><label>Check-out</label><input class="inp" type="date" id="up_out" value="'+esc(r.out||"")+'" onchange="upsFormSync(\'date\')"></div></div>'
+    +'<div class="field" id="up_timewrap"><label id="up_timelbl">Preferred time</label><input class="inp" id="up_time" placeholder="e.g. 11:00 AM" value="'+esc(r.requestedTime||"")+'"></div>'
+    +'<div class="field" id="up_svcwrap"><label>Date needed (delivery or setup)</label><input class="inp" type="date" id="up_svc" value="'+esc(r.serviceDate||"")+'" onchange="upsFormSync(\'date\')"><div class="muted" style="font-size:11px;margin-top:3px">Leave blank to use the check-in date.</div></div>'
+    +'<div class="field" id="up_qtywrap"><label>Quantity</label><input class="inp" type="number" min="1" step="1" id="up_qty" value="'+esc(r.qty||1)+'" oninput="upsFormTotal()"></div>'
+    +'<div class="row2"><div class="field"><label id="up_pricelbl">Price (AUD)</label><input class="inp" type="number" min="0" step="0.01" id="up_price" value="'+esc(priceVal)+'" oninput="upsCtx.manualPrice=true;upsFormTotal()"></div>'
+    +'<div class="field"><label>Requested via</label><select class="inp" id="up_via">'+UPS_VIA.map(v=>'<option'+(v===(r.via||UPS_VIA[0])?" selected":"")+'>'+esc(v)+'</option>').join("")+'</select></div></div>'
+    +'<div class="field"><label>Notes or comments from the guest</label><textarea class="inp" id="up_details" placeholder="e.g. names, cake message, delivery details">'+esc(r.details||"")+'</textarea></div>'
+    +'<div class="field"><label>Internal notes (optional)</label><textarea class="inp" id="up_notes" style="min-height:52px">'+esc(r.notes||"")+'</textarea></div>'
+    +'<div class="field"><label>Remind me to coordinate by</label><input class="inp" type="date" id="up_remind" value="'+esc(r.remindOn||"")+'" onchange="upsCtx.manualRemind=true" oninput="upsCtx.manualRemind=true"><div class="muted" style="font-size:11px;margin-top:3px" id="up_totalline"></div></div>';
+  openModal(id?"Edit upsell":"New upsell",body,
+    (id?'<button class="btn ghost" style="margin-right:auto;color:var(--alert)" onclick="upsDelete(\''+id+'\')">Delete</button>':"")
+    +'<button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="upsSaveForm()">Save upsell</button>');
+  if(id && r.remindOn){ const auto=upsCalcRemind(it.kind,r.in||"",r.out||"",r.serviceDate||"",it.lead); upsCtx.manualRemind=(auto!==r.remindOn); }
+  upsFormSync("init");
+}
+function upsFormTotal(){
+  const q=upsEl("up_qtywrap")&&upsEl("up_qtywrap").style.display!=="none"?Math.max(1,parseInt(val("up_qty"),10)||1):1;
+  const t=(Number(val("up_price"))||0)*q; const el=upsEl("up_totalline"); if(el) el.textContent="Total: "+(t===0?"complimentary":money(t))+". Reminder date is set from the catalog lead days, change it if you like.";
+}
+function upsFormSync(src){
+  const it=upsItemByCat(upsCtx.cat,val("up_item")); if(!it) return;
+  const opts=it.options||[]; const os=upsEl("up_opt");
+  if(src==="item"){ os.innerHTML=opts.map(o=>'<option value="'+esc(o.k)+'">'+esc(o.label+" · "+o.time+" · "+money(o.price))+'</option>').join(""); upsCtx.manualPrice=false; }
+  upsEl("up_optwrap").style.display=opts.length?"":"none";
+  const opt=opts.find(o=>o.k===os.value)||null;
+  if((src==="item"||src==="opt") && !upsCtx.manualPrice) upsEl("up_price").value=String(opt?opt.price:it.price);
+  const timing=(it.kind==="early"||it.kind==="late");
+  upsEl("up_timewrap").style.display=timing?"":"none";
+  upsEl("up_timelbl").textContent=it.kind==="early"?"Preferred arrival time":"Preferred departure time";
+  upsEl("up_svcwrap").style.display=timing?"none":"";
+  upsEl("up_qtywrap").style.display=it.qty?"":"none";
+  upsEl("up_pricelbl").textContent=it.qty?"Price each (AUD)":"Price (AUD)";
+  const of=upsEl("up_offer"); if(of){ of.textContent=it.offer||""; of.style.display=it.offer?"":"none"; }
+  if(!upsCtx.manualRemind) upsEl("up_remind").value=upsCalcRemind(it.kind,val("up_in"),val("up_out"),val("up_svc"),it.lead);
+  upsFormTotal();
+}
+function upsSaveForm(){
+  const it=upsItemByCat(upsCtx.cat,val("up_item")); if(!it){ toast("Pick an upsell."); return; }
+  const guest=val("up_guest").trim(); if(!guest){ toast("Add the guest name."); return; }
+  const inD=val("up_in"), outD=val("up_out"); if(inD&&outD&&outD<inD){ toast("Check-out is before check-in. Check the dates."); return; }
+  const opt=(it.options||[]).find(o=>o.k===val("up_opt"))||null;
+  const timing=(it.kind==="early"||it.kind==="late");
+  const qty=it.qty?Math.max(1,parseInt(val("up_qty"),10)||1):1;
+  const propTxt=val("up_prop").trim(); const pid=upsResolveProp(propTxt);
+  const obj={itemId:it.id,itemName:it.name,kind:it.kind||"item",optionKey:opt?opt.k:"",optionLabel:opt?opt.label:"",time:opt?opt.time:"",qty:qty,price:Number(val("up_price"))||0,
+    guest:guest,code:val("up_code").trim(),propertyId:pid,propertyText:pid?"":propTxt,in:inD,out:outD,serviceDate:timing?"":val("up_svc"),
+    requestedTime:timing?val("up_time").trim():"",details:val("up_details").trim(),notes:val("up_notes").trim(),via:val("up_via"),remindOn:val("up_remind")};
+  if(!obj.remindOn) obj.remindOn=upsCalcRemind(obj.kind,obj.in,obj.out,obj.serviceDate,it.lead);
+  obj.title=upsName(obj)+" for "+guest;
+  const list=upsList();
+  if(upsCtx.id){
+    const i=list.findIndex(x=>x.id===upsCtx.id); if(i<0){ closeModal(); return; }
+    list[i]=Object.assign(list[i],obj,{updated:nowISO()});
+  } else {
+    const rec=Object.assign({id:uid("ups"),created:nowISO(),createdBy:currentUserName(),steps:{requested:{at:nowISO(),by:currentUserName()}},cancelled:false},obj,{updated:nowISO()});
+    list.push(rec); upsState.open[rec.id]=true;
+  }
+  upsSaveList(list); logAct(upsCtx.id?"edit":"add","upsells",obj.title);
+  closeModal(); renderPage("upsells");
+  toast(obj.remindOn?"Saved. Reminder set for "+upsFmt(obj.remindOn)+".":"Saved. Add a check-in date so a reminder can be set.");
+}
+function upsAddAnother(id){ const r=upsById(id); if(!r) return; upsForm(null,{guest:r.guest,code:r.code,propertyId:r.propertyId,propertyText:r.propertyText,in:r.in,out:r.out}); }
+
+/* ---------- filters, search, navigation ---------- */
+function upsSetView(v){ upsState.view=v; renderPage("upsells"); }
+function upsSetStatus(s){ upsState.status=s; renderPage("upsells"); }
+function upsSearch(q){ upsState.q=q||""; upsApplySearch(); }
+function upsApplySearch(){
+  const q=(upsState.q||"").trim().toLowerCase();
+  document.querySelectorAll("[data-ups]").forEach(c=>{ c.style.display=(!q||c.getAttribute("data-ups").indexOf(q)>=0)?"":"none"; });
+  document.querySelectorAll("[data-upsgrp]").forEach(g=>{ const any=Array.prototype.some.call(g.querySelectorAll("[data-ups]"),c=>c.style.display!=="none"); g.style.display=any?"":"none"; });
+}
+pageAfter.upsells=function(){ upsApplySearch(); };
+function upsFocus(id){
+  upsState.view="all"; upsState.status="all"; upsState.q=""; upsState.open[id]=true;
+  if(currentTab!=="upsells") go("upsells"); else renderPage("upsells");
+  setTimeout(function(){ const el=document.getElementById("ups_"+id); if(el&&el.scrollIntoView) el.scrollIntoView({block:"center"}); },80);
+}
+function upsCalNav(d){ upsState.calMonth=ymAdd(upsState.calMonth||todayAU().slice(0,7),d); renderPage("upsells"); }
+
+/* ---------- rendering ---------- */
+function upsChips(r){
+  return '<div class="chkrow upschk">'+upsSteps(r).map(s=>{
+    const on=upsDone(r,s[0]); const t=on?r.steps[s[0]]:null;
+    return '<span class="chkpill'+(on?" on":"")+'" title="'+esc(s[1]+(t?", "+fmtWhen(t.at)+(t.by?", "+t.by:""):""))+'" onclick="event.stopPropagation();upsToggleStep(\''+r.id+'\',\''+s[0]+'\')"><input type="checkbox" '+(on?"checked":"")+' style="pointer-events:none">'+esc(s[2])+'</span>';
+  }).join("")+'</div>';
+}
+function upsKV(k,v){ return (v!==""&&v!=null)?'<div class="rsrow"><div class="rsk">'+esc(k)+'</div><div class="rsv">'+esc(v)+'</div></div>':""; }
+function upsCard(r){
+  const open=!!upsState.open[r.id]; const st=upsStatus(r); const u=upsUrgency(r); const nx=upsNext(r); const due=upsDue(r); const tgt=upsTarget(r);
+  const tot=upsTotal(r);
+  const payPill=tot===0?'<span class="pill mut">Complimentary</span>':'<span class="pill '+(upsDone(r,"paid")?"ok":"alert")+'">'+money(tot)+' &middot; '+(upsDone(r,"paid")?"Paid":"Unpaid")+'</span>';
+  const urgPill=(u&&(u.key==="past"||u.key==="overdue"||u.key==="today"||u.key==="tomorrow"))?'<span class="pill '+u.tone+'">'+esc(u.label)+'</span>':"";
+  const search=[r.title,upsPropLabel(r),r.code,r.details,r.notes,r.itemName].join(" ").toLowerCase();
+  const header='<div class="resh" onclick="upsToggle(\''+r.id+'\')">'
+    +'<span class="caret'+(open?" open":"")+'">&#9656;</span>'
+    +'<div style="flex:1;min-width:150px"><div style="font-weight:600">'+esc(upsName(r))+((Number(r.qty)||1)>1?' <span class="muted">x'+esc(r.qty)+'</span>':"")+'</div>'
+      +'<div class="muted" style="font-size:11.5px;margin-top:2px">'+esc(r.guest||"")+' &middot; '+esc(upsPropLabel(r))+'</div></div>'
+    +'<div class="muted" style="font-size:11px;min-width:118px">In '+esc(upsFmt(r.in))+'<br>Out '+esc(upsFmt(r.out))+'</div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-left:auto"><span class="pill '+st.tone+'">'+esc(st.label)+'</span>'+urgPill+payPill+'</div></div>';
+  let dueLine="";
+  if(upsOpen(r)){
+    dueLine='<div class="upsdue">'+(tgt?'<span>Needed '+esc(upsFmt(tgt))+'.</span>':'<span>No date set.</span>')+(due.date?'<span>'+esc(due.what)+' <b>'+esc(upsFmt(due.date))+'</b>.</span>':'')+'</div>';
+  }
+  let actions="";
+  if(r.cancelled) actions='<div class="upsact"><button class="btn ghost" onclick="upsReopen(\''+r.id+'\')">Reopen</button></div>';
+  else if(nx){
+    actions='<div class="upsact"><button class="btn" onclick="upsAdvance(\''+r.id+'\')">'+esc(UPS_ACTION[nx])+'</button>'
+      +(nx==="coordinated"?'<button class="btn ghost" onclick="upsNotifyJulie(\''+r.id+'\')">Notify Julie</button><button class="btn ghost" onclick="upsCopyMsg(\''+r.id+'\')">Copy message</button>':"")+'</div>';
+  }
+  const always='<div class="resb upsq">'+(r.cancelled?'':upsChips(r))+dueLine+actions+'</div>';
+  let more="";
+  if(open){
+    const cat=upsCatalog().find(x=>x.id===r.itemId);
+    const log=upsSteps(r).filter(s=>upsDone(r,s[0])).map(s=>s[1]+": "+fmtWhen(r.steps[s[0]].at)+(r.steps[s[0]].by?" ("+r.steps[s[0]].by+")":"")).join("\n");
+    more='<div class="resb" style="border-top:1px dashed var(--line);padding-top:10px">'
+      +(cat&&cat.offer?'<div class="note" style="margin:0 0 8px"><b>What the guest was offered.</b> '+esc(cat.offer)+'</div>':"")
+      +upsKV("Guest",r.guest)+upsKV("Property",upsPropLabel(r))+upsKV("Reservation code",r.code)
+      +upsKV("Stay",(r.in||r.out)?upsFmt(r.in)+" to "+upsFmt(r.out):"")
+      +upsKV("Option",r.optionLabel?r.optionLabel+(r.time?", "+r.time:""):"")
+      +upsKV(r.kind==="early"?"Preferred arrival":"Preferred departure",r.requestedTime)
+      +upsKV("Date needed",tgt?upsFmt(tgt):"")
+      +upsKV("Quantity",(Number(r.qty)||1)>1?String(r.qty):"")
+      +upsKV("Price",upsMoney(r)+((Number(r.qty)||1)>1?" ("+money(r.price)+" each)":""))
+      +upsKV("Guest notes",r.details)+upsKV("Internal notes",r.notes)+upsKV("Requested via",r.via)
+      +upsKV("Reminder",r.remindOn?upsFmt(r.remindOn):"")
+      +upsKV("Julie notified",r.hkNotified?fmtWhen(r.hkNotified)+(r.hkNotifiedBy?" ("+r.hkNotifiedBy+")":""):"")
+      +upsKV("Progress",log)
+      +'<div class="upsacts">'
+        +'<button class="btn ghost sm" onclick="upsForm(\''+r.id+'\')">Edit</button>'
+        +'<button class="btn ghost sm" onclick="upsAddAnother(\''+r.id+'\')">Add another for this guest</button>'
+        +(r.cancelled?"":'<button class="btn ghost sm" onclick="upsNotifyJulie(\''+r.id+'\')">Notify Julie</button><button class="btn ghost sm" onclick="upsCopyMsg(\''+r.id+'\')">Copy message for Julie</button>')
+        +(upsOpen(r)?'<button class="btn ghost sm" onclick="upsSnooze(\''+r.id+'\')">Snooze 1 day</button><button class="btn ghost sm" onclick="upsGcal(\''+r.id+'\')">Google Calendar</button><button class="btn ghost sm" onclick="upsIcs(\''+r.id+'\')">Phone calendar (.ics)</button>':"")
+        +(r.cancelled?"":'<button class="btn danger sm" onclick="upsCancel(\''+r.id+'\')">Decline or cancel</button>')
+      +'</div></div>';
+  }
+  return '<div class="rescard" id="ups_'+r.id+'" data-ups="'+esc(search)+'">'+header+always+more+'</div>';
+}
+function upsSortDue(a,b){ const da=upsDue(a).date||"9999", db_=upsDue(b).date||"9999"; return da.localeCompare(db_)||(upsTarget(a)||"9999").localeCompare(upsTarget(b)||"9999"); }
+function upsQueue(list){
+  const open=list.filter(upsOpen).sort(upsSortDue);
+  if(!open.length) return '<div class="card"><div class="empty"><h4>Nothing to chase</h4><p>Log a guest upsell with New upsell and it lands here with a reminder date.</p></div></div>';
+  const bucket=r=>{ const u=upsUrgency(r); return (u.key==="past"||u.key==="overdue")?"overdue":u.key; };
+  const groups=[["overdue","Overdue or date passed",true],["today","Today"],["tomorrow","Tomorrow"],["week","This week"],["later","Later"],["nodate","No date set"]];
+  return groups.map(g=>{ const items=open.filter(r=>bucket(r)===g[0]); if(!items.length) return "";
+    return '<div class="agrp" data-upsgrp="'+g[0]+'"><div class="ah'+(g[2]?" od":"")+'">'+esc(g[1])+' <span class="chip'+(g[2]?" alert":"")+'">'+items.length+'</span></div>'+items.map(upsCard).join("")+'</div>'; }).join("");
+}
+function upsFilterDefs(list){
+  const f={open:r=>upsOpen(r),unpaid:r=>upsOpen(r)&&upsNext(r)==="paid",approval:r=>upsOpen(r)&&upsNext(r)==="approved",housekeeping:r=>upsOpen(r)&&upsNext(r)==="coordinated",tocomplete:r=>upsOpen(r)&&upsNext(r)==="completed",completed:r=>!r.cancelled&&upsNext(r)===null,declined:r=>!!r.cancelled,all:r=>true};
+  const labels=[["open","Open"],["unpaid","Unpaid"],["approval","Awaiting approval"],["housekeeping","Needs housekeeping"],["tocomplete","To complete"],["completed","Completed"],["declined","Declined"],["all","All"]];
+  return {f:f,labels:labels};
+}
+function upsAll(list){
+  const d=upsFilterDefs(list); const cur=d.f[upsState.status]?upsState.status:"open";
+  const chips='<div class="upsfilters">'+d.labels.map(l=>'<button class="filterbtn'+(l[0]===cur?" on":"")+'" onclick="upsSetStatus(\''+l[0]+'\')">'+esc(l[1])+' <span class="n">'+list.filter(d.f[l[0]]).length+'</span></button>').join("")+'</div>';
+  const rows=list.filter(d.f[cur]);
+  const openRows=rows.filter(upsOpen).sort(upsSortDue);
+  const closedRows=rows.filter(r=>!upsOpen(r)).sort((a,b)=>(upsTarget(b)||"").localeCompare(upsTarget(a)||""));
+  const cards=openRows.concat(closedRows).map(upsCard).join("");
+  return chips+(cards?'<div data-upsgrp="all">'+cards+'</div>':'<div class="card"><div class="empty"><h4>Nothing here</h4><p>No upsells match this filter.</p></div></div>');
+}
+function upsCalendar(list){
+  if(!upsState.calMonth) upsState.calMonth=todayAU().slice(0,7);
+  const ym=upsState.calMonth; const ev=[];
+  list.filter(r=>!r.cancelled).forEach(r=>{
+    const tgt=upsTarget(r); const st=upsStatus(r); const tone=st.key==="done"?"ok":(st.tone==="mut"?"muted":st.tone);
+    const first=String(r.guest||"").split(" ")[0];
+    if(tgt&&tgt.slice(0,7)===ym) ev.push({date:tgt,label:(r.itemName||"Upsell")+" "+first,tone:tone});
+    if(upsOpen(r)&&!upsDone(r,"coordinated")&&r.remindOn&&r.remindOn!==tgt&&r.remindOn.slice(0,7)===ym) ev.push({date:r.remindOn,label:"Remind: "+(r.itemName||"Upsell")+" "+first,tone:"muted"});
+  });
+  return calStyle()+calNav(ym,"upsCalNav")+monthGrid(ym,ev)
+    +'<div class="note" style="margin-top:12px">Coloured entries sit on the date needed: red unpaid, amber awaiting approval, blue in progress, green completed. Grey entries are your reminder dates.</div>';
+}
+function upsHero(){
+  const steps=[
+    ["1. Requested","Log it","Guest orders in the portal or asks by message. Log it here with the reservation details.","htag-teal"],
+    ["2. Paid","Payment","Payment received. Early check-in and late check-out are only charged if approved, the portal takes a hold at request.","htag-blue"],
+    ["3. Approved","Decide","Confirm it can be delivered. Early and late times depend on cleaning schedules and other guests.","htag-gold"],
+    ["4. Coordinated with housekeeping","Julie","Send Julie the details and get her confirmation.","htag-green"],
+    ["5. Completed","Close","Delivered or done. Mark it completed so it drops off the reminders.","htag-purple"]
+  ];
+  return '<details class="hero upshero"><summary><span class="hero-t">Standard operating procedure, guest upsells</span><span class="hero-s">Five steps from request to done. Tap to see them.</span></summary>'
+    +'<div class="steps">'+steps.map(s=>'<div class="step"><div class="n"><span>'+esc(s[0])+'</span><span class="htag '+s[3]+'">'+esc(s[1])+'</span></div><div class="d">'+esc(s[2])+'</div></div>').join("")+'</div>'
+    +'<div style="margin-top:12px;font-size:11px;color:rgba(234,243,234,.75)">Complimentary items skip the paid step. Reminders count back from the date needed, using the days set in the catalog.</div></details>';
+}
+function upsPhonePanel(){
+  return '<div class="card" style="margin-top:16px"><div class="card-hd"><h3>Reminders on your phone</h3></div><div class="card-bd">'
+    +'<div style="font-size:12.5px;color:var(--ink2);margin-bottom:10px">Every upsell gets a reminder date. The nav badge, My Day, the dashboard and the Agenda card all pick it up. To get a phone alert as well, add it to your calendar.</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="upsIcsAll()">Export all open reminders (.ics)</button><button class="btn ghost" onclick="csvExport(\'upsells\')">Export upsells to CSV</button></div>'
+    +'<div class="note">The .ics file is a snapshot with a 9am alert on each reminder date. Open it on your phone to import. Re-export after adding new upsells, or use the Google Calendar or phone calendar buttons on each card as you go.</div>'
+    +'</div></div>';
+}
+function viewUpsells(){
+  const list=upsList();
+  const open=list.filter(upsOpen);
+  const attn=upsAttnCount();
+  const unpaid=open.filter(r=>upsNext(r)==="paid");
+  const unpaidVal=unpaid.reduce((s,r)=>s+upsTotal(r),0);
+  const ym=todayAU().slice(0,7);
+  const paidMonth=list.filter(r=>!r.cancelled&&r.steps&&r.steps.paid&&String(r.steps.paid.at||"").slice(0,7)===ym).reduce((s,r)=>s+upsTotal(r),0);
+  const view=["queue","all","cal"].indexOf(upsState.view)>=0?upsState.view:"queue";
+  const stats='<div class="upsstats"><div class="kpis">'
+    +kpi("Open upsells",open.length,"not yet completed",true)
+    +kpi("Do today or overdue",attn,attn?"needs you now":"all clear")
+    +kpi("Unpaid",unpaid.length,money(unpaidVal)+" to collect")
+    +kpi("Paid this month",money(paidMonth),"logged in the hub")
+    +'</div></div>';
+  const bar='<div class="filterbar"><input class="inp" id="upsQ" placeholder="Search guest, property or upsell" value="'+esc(upsState.q||"")+'" oninput="upsSearch(this.value)" style="flex:1;min-width:140px;max-width:340px" autocomplete="off">'
+    +'<button class="btn" onclick="upsForm()">New upsell</button><button class="btn ghost sm" onclick="upsCatalogEdit()">Catalog</button></div>';
+  const body=view==="cal"?upsCalendar(list):view==="all"?upsAll(list):upsQueue(list)+upsPhonePanel();
+  return head("Guest experience","Upsells","Guest add-ons from request to done. Everything saves automatically and reminders count back from the date needed.")
+    +bar+upsHero()+stats
+    +viewSeg(view,[["queue","To do"],["all","All upsells"],["cal","Calendar"]],"upsSetView")
+    +body;
+}
+function upsMyDayCard(){
+  try{
+    const items=upsAttnList().sort(upsSortDue); if(!items.length) return "";
+    const rows=items.map(r=>{ const u=upsUrgency(r); const n=upsNext(r);
+      return '<div class="rowline"><span class="pill '+u.tone+'">'+esc(u.label)+'</span><div class="grow"><div>'+esc(r.title||upsName(r))+'</div><div class="muted mono" style="font-size:10px">'+esc(upsPropLabel(r))+' &middot; next: '+esc(n?UPS_ACTION[n].replace("Mark ",""):"done")+'</div></div><button class="linkbtn" onclick="upsFocus(\''+r.id+'\')">open</button></div>'; }).join("");
+    return '<div style="margin-top:16px">'+card("Upsells to action ("+items.length+")",rows,'<div style="margin-top:10px"><button class="btn ghost sm" onclick="go(\'upsells\')">Open upsells</button></div>')+'</div>';
+  }catch(e){ return ""; }
+}
+
 
 /* ============================================================
    BOOT
@@ -4597,6 +5221,525 @@ async function boot(){
   }
 }
 boot();
+
+</script>
+
+<!-- ===== TS Google Sheets two-way sync (injected) ===== -->
+<script>
+/* ============================================================
+   TS | Google Sheets two-way sync  (Mid-Stay Cleans + Shield Claims)
+   Injected module. Does not touch the existing UI or data model.
+   - Maps the flat sheet columns to/from the rich app objects, keyed by code.
+   - 3-way merge (base snapshot vs app vs sheet) so it never ping-pongs
+     and never clobbers app-only fields (items, attachments, cleans, sop).
+   - Hooks save() to push on edit, polls to pull, no auto-delete either side.
+   - Endpoint + token live behind a PIN vault, ts_ prefix.
+   ============================================================ */
+(function(){
+"use strict";
+try{
+
+var PFX = (typeof window.PFX==="string") ? window.PFX : "ts_";
+var LS = {
+  endpoint:PFX+"sheet_endpoint",
+  token:PFX+"sheet_token",
+  pin:PFX+"sheet_pin",
+  interval:PFX+"sheet_interval",
+  enabled:PFX+"sheet_enabled",
+  snap:PFX+"sheet_snap"
+};
+function lget(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lset(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+// ---------- small utils ----------
+function round2(n){ return Math.round((Number(n)||0)*100)/100; }
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+var MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function toSheetDate(iso){
+  if(!iso) return "";
+  var m=String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(!m) return String(iso);
+  return String(parseInt(m[3],10))+"-"+MON[parseInt(m[2],10)-1]+"-"+m[1];
+}
+function fromSheetDate(v){
+  if(v==null) return "";
+  var s=String(v).trim(); if(!s) return "";
+  var iso=s.match(/^(\d{4})-(\d{2})-(\d{2})/); if(iso) return iso[1]+"-"+iso[2]+"-"+iso[3];
+  // d-MMM-yyyy or d MMM yyyy (optionally with time)
+  var m=s.match(/^(\d{1,2})[-\s]([A-Za-z]{3,})[-\s](\d{4})/);
+  if(m){
+    var mi=MON.findIndex(function(x){ return x.toLowerCase()===m[2].slice(0,3).toLowerCase(); });
+    if(mi>=0) return m[3]+"-"+pad(mi+1)+"-"+pad(parseInt(m[1],10));
+  }
+  var t=Date.parse(s);
+  if(!isNaN(t)){ var d=new Date(t); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  return "";
+}
+function pad(n){ return (n<10?"0":"")+n; }
+
+// canonicalisers (used on BOTH app value and sheet value so equal values match)
+function cText(v){ return String(v==null?"":v).trim(); }
+function cNum(v){ var n=parseFloat(String(v==null?"":v).replace(/[^0-9.\-]/g,"")); return isNaN(n)?"":String(n); }
+function cMoney(v){ var n=parseFloat(String(v==null?"":v).replace(/[^0-9.\-]/g,"")); return isNaN(n)?"":String(round2(n)); }
+function cBool(v){ return (v===true||/^true$/i.test(String(v))||String(v)==="1")?"true":"false"; }
+function boolVal(v){ return v===true||/^true$/i.test(String(v))||String(v)==="1"; }
+function cDate(v){ return fromSheetDate(v); }
+
+// status mapping (app key <-> sheet text)
+function appStatusToSheet(s){
+  var m={open:"Open",preparing:"Preparing",submitted:"Submitted",approved:"Approved",diff_approved:"Different Amount Approved",declined:"Declined",dispute:"Dispute"};
+  return m[s]||"";
+}
+function sheetStatusToApp(t){
+  var s=String(t||"").toLowerCase();
+  if(s.indexOf("different")!==-1) return "diff_approved";
+  if(s.indexOf("approv")!==-1) return "approved";
+  if(s.indexOf("submit")!==-1) return "submitted";
+  if(s.indexOf("declin")!==-1) return "declined";
+  if(s.indexOf("disput")!==-1) return "dispute";
+  if(s.indexOf("prepar")!==-1) return "preparing";
+  return "open";
+}
+function cStatus(v){ return sheetStatusToApp(v); }
+
+function setClaimTotal(c,v){
+  var want=round2(v);
+  var cur=round2((c.items||[]).reduce(function(s,i){ return s+Number(i.amount||0); },0));
+  var diff=round2(want-cur);
+  if(Math.abs(diff)<0.005) return;
+  if(!c.items||!c.items.length){
+    c.items=[{id:mkid("item"),item:"Claim total (from sheet)",damage:"",action:"",amount:want,receipt:false}];
+  } else {
+    c.items.push({id:mkid("item"),item:"Adjustment (from sheet)",damage:"",action:"",amount:diff,receipt:false});
+  }
+}
+function mkid(p){ try{ return window.uid?window.uid(p):(p+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)); }catch(e){ return p+"_"+Date.now(); } }
+function niso(){ try{ return window.nowISO?window.nowISO():new Date().toISOString(); }catch(e){ return new Date().toISOString(); } }
+function propNm(v){ try{ return window.propName?window.propName(v):v; }catch(e){ return v; } }
+function resolveProp(v){ try{ return window.resolvePropId?window.resolvePropId(v):""; }catch(e){ return ""; } }
+function claimDl(c){ try{ return window.claimDeadline?window.claimDeadline(c):""; }catch(e){ return ""; } }
+function claimTot(c){ try{ return window.claimTotal?window.claimTotal(c):(c.items||[]).reduce(function(s,i){return s+Number(i.amount||0);},0); }catch(e){ return 0; } }
+
+// ---------- grid definitions ----------
+var GRIDS = {
+  shield: {
+    collection:"shieldClaims",
+    keyCol:"Reservation",
+    keyOf:function(c){ return cText(c.reservationCode); },
+    make:function(code){ return {id:mkid("claim"),reservationCode:code,status:"open",currency:"AUD",framing:"housekeeping_found",items:[],hasDamagePhotos:false,hasGuestScreenshot:false,created:niso(),updated:niso(),__fromSheet:true}; },
+    fields:[
+      {col:"Reservation",        key:true,  get:function(c){return cText(c.reservationCode);}, canon:cText},
+      {col:"Property",           get:function(c){return propNm(c.listing)||"";}, set:function(c,v){ c.listing=resolveProp(v)||v; }, canon:cText},
+      {col:"Guest",              get:function(c){return c.guestName||"";}, set:function(c,v){ c.guestName=v; }, canon:cText},
+      {col:"Check-in",           get:function(c){return toSheetDate(c.checkIn);}, set:function(c,v){ c.checkIn=fromSheetDate(v); }, canon:cDate},
+      {col:"Check-out",          get:function(c){return toSheetDate(c.checkOut);}, set:function(c,v){ c.checkOut=fromSheetDate(v); }, canon:cDate},
+      {col:"Deadline",           appOwned:true, get:function(c){return toSheetDate(claimDl(c));}, canon:cDate},
+      {col:"Submission Date",    get:function(c){return toSheetDate(c.submissionDate);}, set:function(c,v){ c.submissionDate=fromSheetDate(v); }, canon:cDate},
+      {col:"Approval Date",      get:function(c){return toSheetDate(c.approvalDate);}, set:function(c,v){ c.approvalDate=fromSheetDate(v); }, canon:cDate},
+      {col:"Total Claim (AUD)",  get:function(c){return round2(claimTot(c));}, set:function(c,v){ setClaimTotal(c,v); }, canon:cMoney},
+      {col:"Status",             get:function(c){return appStatusToSheet(c.status);}, set:function(c,v){ var a=sheetStatusToApp(v); c.status=a; if(a==="diff_approved"){ var am=String(v).match(/\$[\d,\.]+/); if(am) c.approvedAmount=am[0]; } }, canon:cStatus},
+      {col:"Eva Paid",           get:function(c){return !!c.evaPaid;}, set:function(c,v){ c.evaPaid=boolVal(v); }, canon:cBool},
+      {col:"Owner Advised",      get:function(c){return !!c.ownerAdvised;}, set:function(c,v){ c.ownerAdvised=boolVal(v); }, canon:cBool},
+      {col:"Remarks",            get:function(c){return c.remarks||"";}, set:function(c,v){ c.remarks=v; }, canon:cText}
+    ]
+  },
+  midstay: {
+    collection:"midstay",
+    keyCol:"CONFIRMATION CODE",
+    keyOf:function(m){ return cText(m.code); },
+    make:function(code){ return {id:mkid("clean"),code:code,fee:(typeof window.MID_FEE==="number"?window.MID_FEE:99),created:niso(),updated:niso(),__fromSheet:true}; },
+    fields:[
+      {col:"CHECK-IN",        get:function(m){return toSheetDate(m.in||m.checkin);}, set:function(m,v){ m.in=fromSheetDate(v); }, canon:cDate},
+      {col:"CHECK-OUT",       get:function(m){return toSheetDate(m.out||m.checkout);}, set:function(m,v){ m.out=fromSheetDate(v); }, canon:cDate},
+      {col:"NIGHTS",          get:function(m){return (m.nights==null||m.nights==="")?"":Number(m.nights);}, set:function(m,v){ var n=cNum(v); m.nights=(n===""?"":Number(n)); }, canon:cNum},
+      {col:"CONFIRMATION CODE",key:true, get:function(m){return cText(m.code);}, canon:cText},
+      {col:"LISTING",         get:function(m){return m.listing||"";}, set:function(m,v){ m.listing=v; var id=resolveProp(v); if(id) m.listingId=id; }, canon:cText},
+      {col:"GUEST",           get:function(m){return m.guest||"";}, set:function(m,v){ m.guest=v; }, canon:cText},
+      {col:"TOTAL PAYOUT",    get:function(m){return (m.payout==null||m.payout==="")?"":round2(m.payout);}, set:function(m,v){ var n=cMoney(v); m.payout=(n===""?"":Number(n)); }, canon:cMoney},
+      {col:"PLATFORM",        get:function(m){return m.platform||"";}, set:function(m,v){ m.platform=v; }, canon:cText},
+      {col:"PAYMENT METHOD",  get:function(m){return m.method||"";}, set:function(m,v){ m.method=v; }, canon:cText},
+      {col:"TOTAL PAID",      get:function(m){return (m.paid==null||m.paid==="")?"":round2(m.paid);}, set:function(m,v){ var n=cMoney(v); m.paid=(n===""?"":Number(n)); }, canon:cMoney}
+    ]
+  }
+};
+
+// ---------- state ----------
+var SS = {
+  applying:false,
+  busy:false,
+  lastSync:null,
+  lastError:"",
+  pollTimer:null,
+  pushTimers:{},
+  snap:loadSnap()
+};
+function loadSnap(){ try{ return JSON.parse(lget(LS.snap)||"{}")||{}; }catch(e){ return {}; } }
+function saveSnap(){ lset(LS.snap, JSON.stringify(SS.snap)); }
+function gridSnap(g){ if(!SS.snap[g]) SS.snap[g]={}; return SS.snap[g]; }
+
+function endpoint(){ return (lget(LS.endpoint)||"").trim(); }
+function token(){ return (lget(LS.token)||"").trim(); }
+function interval(){ var n=parseInt(lget(LS.interval),10); return (n&&n>=10)?n:45; }
+function enabled(){ return lget(LS.enabled)==="1" && !!endpoint() && !!token(); }
+
+// ---------- app data access ----------
+function readList(g){ try{ return (window.db? window.db(GRIDS[g].collection,[]) : []) || []; }catch(e){ return []; } }
+function writeList(g,list){
+  SS.applying=true;
+  try{ window.save(GRIDS[g].collection, list); }catch(e){}
+  SS.applying=false;
+}
+function reRender(){ try{ var t=(typeof currentTab!=="undefined")?currentTab:(window.currentTab||"dash"); if(window.renderPage) window.renderPage(t); }catch(e){} }
+
+// ---------- reconcile (pull + merge + push) ----------
+function reconcile(g, cb){
+  if(!enabled()){ if(cb)cb(); return; }
+  setStatus("busy","Syncing "+g+"...");
+  var url=endpoint();
+  var full=url+(url.indexOf("?")===-1?"?":"&")+"grid="+encodeURIComponent(g)+"&token="+encodeURIComponent(token())+"&_="+Date.now();
+  fetch(full,{method:"GET"})
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(!res.ok) throw new Error(res.error||"server rejected");
+      mergeAndPush(g, res.rows||[], cb);
+    })
+    .catch(function(err){
+      SS.lastError=short(err);
+      setStatus("off","Offline: "+short(err));
+      if(cb)cb(err);
+    });
+}
+
+function mergeAndPush(g, sheetRows, cb){
+  var def=GRIDS[g], fields=def.fields, snap=gridSnap(g);
+  var list=readList(g).slice();
+  var byKey={};
+  list.forEach(function(rec){ var k=def.keyOf(rec); if(k) byKey[k]=rec; });
+
+  var appChanged=false, conflict=false;
+  var seen={};
+
+  // sheet -> app (3-way merge)
+  sheetRows.forEach(function(sr){
+    var code=cText(sr[def.keyCol]); if(!code) return;
+    seen[code]=true;
+    var rec=byKey[code];
+    var base=snap[code];
+    if(!rec){
+      // new row created in the sheet -> create app record
+      rec=def.make(code);
+      fields.forEach(function(f){ if(f.key||f.appOwned||!f.set) return; f.set(rec, sr[f.col]); });
+      list.push(rec); byKey[code]=rec; appChanged=true;
+      snap[code]=snapRow(fields, rec, sr, true); // base = the imported values
+      return;
+    }
+    var b=base||{};
+    fields.forEach(function(f){
+      if(f.key) return;
+      var appC=f.canon(f.get(rec));
+      var shC=f.canon(sr[f.col]);
+      var baC=(f.col in b)?b[f.col]:appC; // if no base, assume app is base
+      if(f.appOwned){ return; } // never import app-owned (Deadline)
+      if(shC===appC) return;                 // already equal
+      if(shC!==baC && appC===baC){           // sheet changed only -> take sheet
+        if(f.set){ f.set(rec, sr[f.col]); rec.updated=niso(); appChanged=true; }
+      } else if(shC!==baC && appC!==baC){     // both changed -> hub wins, will push
+        conflict=true;
+      }
+      // else app changed only -> leave, push step handles it
+    });
+  });
+
+  if(appChanged){ writeList(g, list); reRender(); }
+
+  // build push set: any keyed record whose canon differs from snap (or new to snap)
+  var pushRows=[];
+  list.forEach(function(rec){
+    var code=def.keyOf(rec); if(!code) return;
+    var b=snap[code];
+    var row={}, diff=false;
+    row[def.keyCol]=code;
+    fields.forEach(function(f){
+      var val=f.get(rec);
+      row[f.col]=val;
+      var appC=f.canon(val);
+      if(!b || !(f.col in b) || b[f.col]!==appC) diff=true;
+    });
+    if(diff) pushRows.push({code:code, row:row, rec:rec});
+  });
+
+  if(!pushRows.length){
+    // nothing to push, refresh snap for seen rows to the agreed values
+    list.forEach(function(rec){ var code=def.keyOf(rec); if(code) snap[code]=snapRow(fields,rec); });
+    saveSnap();
+    SS.lastSync=new Date(); setStatus("on","Synced"); updateFoot();
+    if(conflict) toast("Sheet edit conflicted with a hub edit, hub kept for "+g,true);
+    if(cb)cb();
+    return;
+  }
+
+  // push changed rows (bulk)
+  var url=endpoint();
+  fetch(url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify({grid:g,token:token(),action:"bulk",rows:pushRows.map(function(x){return x.row;})})})
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(!res.ok) throw new Error(res.error||"push rejected");
+      pushRows.forEach(function(x){ snap[x.code]=snapRow(fields,x.rec); });
+      // also refresh snap for unchanged seen rows
+      list.forEach(function(rec){ var code=def.keyOf(rec); if(code && !snap[code]) snap[code]=snapRow(fields,rec); });
+      saveSnap();
+      SS.lastSync=new Date(); setStatus("on","Synced ("+pushRows.length+" pushed)"); updateFoot();
+      if(conflict) toast("Sheet edit conflicted with a hub edit, hub kept for "+g,true);
+      if(cb)cb();
+    })
+    .catch(function(err){
+      SS.lastError=short(err);
+      setStatus("off","Push failed: "+short(err));
+      if(cb)cb(err);
+    });
+}
+
+function snapRow(fields, rec, sr, fromSheet){
+  var o={};
+  fields.forEach(function(f){
+    if(fromSheet && !f.key) o[f.col]=f.canon(sr[f.col]); // base = sheet's known state
+    else o[f.col]=f.canon(f.get(rec));
+  });
+  return o;
+}
+
+function reconcileAll(cb){
+  reconcile("shield", function(){ reconcile("midstay", cb); });
+}
+
+// debounced push after a hub edit
+function schedulePush(g){
+  if(!enabled()) return;
+  clearTimeout(SS.pushTimers[g]);
+  SS.pushTimers[g]=setTimeout(function(){ reconcile(g); }, 900);
+}
+
+// ---------- hook save() ----------
+(function hookSave(){
+  if(typeof window.save!=="function"){ setTimeout(hookSave,300); return; }
+  if(window.save.__ssWrapped) return;
+  var orig=window.save;
+  var wrapped=function(key,val){
+    orig(key,val);
+    if(!SS.applying && enabled()){
+      if(key==="shieldClaims") schedulePush("shield");
+      else if(key==="midstay") schedulePush("midstay");
+    }
+  };
+  wrapped.__ssWrapped=true;
+  window.save=wrapped;
+})();
+
+// ---------- polling ----------
+function startPolling(){
+  if(SS.pollTimer) clearInterval(SS.pollTimer);
+  SS.pollTimer=setInterval(function(){ if(enabled()) reconcileAll(); }, interval()*1000);
+}
+window.addEventListener("focus",function(){ if(enabled()) reconcileAll(); });
+window.addEventListener("online",function(){ if(enabled()) reconcileAll(); });
+
+// ============================================================
+//  UI  (fixed launcher + PIN vault + settings)
+// ============================================================
+var CSS =
+".ss-launch{position:fixed;right:16px;bottom:16px;z-index:9000;display:flex;align-items:center;gap:8px;"+
+"background:#14231c;color:#e8f0ec;border:1px solid #274437;border-radius:24px;padding:9px 14px;cursor:pointer;"+
+"font:13px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35)}"+
+".ss-launch:hover{border-color:#2e9e6b}"+
+".ss-dot{width:9px;height:9px;border-radius:50%;background:#9db3a9;flex:none}"+
+".ss-dot.on{background:#3fa36b;box-shadow:0 0 0 3px rgba(63,163,107,.18)}"+
+".ss-dot.off{background:#d1685f;box-shadow:0 0 0 3px rgba(209,104,95,.18)}"+
+".ss-dot.busy{background:#d9a441;box-shadow:0 0 0 3px rgba(217,164,65,.18)}"+
+".ss-ov{position:fixed;inset:0;background:rgba(4,10,8,.66);z-index:9001;display:none;align-items:center;justify-content:center;padding:16px}"+
+".ss-ov.show{display:flex}"+
+".ss-modal{background:#14231c;color:#e8f0ec;border:1px solid #274437;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.45);width:100%;max-width:520px;padding:22px;"+
+"font:14px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif}"+
+".ss-modal h2{margin:0 0 4px;font-size:16px}"+
+".ss-modal p.h{margin:0 0 16px;color:#9db3a9;font-size:12.5px}"+
+".ss-f{margin-bottom:13px}"+
+".ss-f label{display:block;font-size:12px;color:#9db3a9;margin-bottom:5px}"+
+".ss-f input{width:100%;background:#0f1a15;border:1px solid #274437;border-radius:9px;padding:10px 12px;color:#e8f0ec;font-size:13.5px;outline:0;font-family:ui-monospace,Menlo,monospace}"+
+".ss-f input.plain{font-family:inherit}"+
+".ss-f input:focus{border-color:#2e9e6b}"+
+".ss-act{display:flex;gap:9px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}"+
+".ss-btn{background:#20362c;color:#e8f0ec;border:1px solid #274437;padding:9px 13px;border-radius:9px;cursor:pointer;font-size:13px}"+
+".ss-btn:hover{border-color:#2e9e6b}"+
+".ss-btn.p{background:#2e9e6b;border-color:#2e9e6b;color:#04180f;font-weight:600}"+
+".ss-btn.g{background:transparent}"+
+".ss-msg{font-size:12.5px;min-height:16px;margin-top:8px}"+
+".ss-msg.err{color:#f0a49d}.ss-msg.ok{color:#7fd6a6}"+
+".ss-note{color:#9db3a9;font-size:12px;margin-top:10px;line-height:1.5}";
+
+function injectUI(){
+  if(document.getElementById("ssLaunch")) return;
+  var st=document.createElement("style"); st.textContent=CSS; document.head.appendChild(st);
+
+  var b=document.createElement("div");
+  b.className="ss-launch"; b.id="ssLaunch";
+  b.innerHTML='<span class="ss-dot" id="ssDot"></span><span id="ssLabel">Sheets sync</span>';
+  b.addEventListener("click",openVault);
+  document.body.appendChild(b);
+
+  var ov=document.createElement("div");
+  ov.className="ss-ov"; ov.id="ssOverlay";
+  ov.innerHTML=''+
+    '<div class="ss-modal">'+
+    '  <div id="ssLocked">'+
+    '    <h2>Sheets sync vault</h2>'+
+    '    <p class="h">Enter your PIN to view or change the sync endpoint and token.</p>'+
+    '    <div class="ss-f"><label>PIN</label><input type="password" id="ssPin" class="plain" inputmode="numeric" autocomplete="off"></div>'+
+    '    <div class="ss-msg" id="ssLockMsg"></div>'+
+    '    <div class="ss-act"><button class="ss-btn g" id="ssCancel">Cancel</button><button class="ss-btn p" id="ssUnlock">Unlock</button></div>'+
+    '    <div class="ss-note" id="ssSetup"></div>'+
+    '  </div>'+
+    '  <div id="ssOpen" style="display:none">'+
+    '    <h2>Sheets sync settings</h2>'+
+    '    <p class="h">Two-way sync for Mid-Stay Cleans and Shield Claims. Credentials stay in this browser, behind your PIN.</p>'+
+    '    <div class="ss-f"><label>Apps Script web app URL (ends in /exec)</label><input type="text" id="ssEndpoint" placeholder="https://script.google.com/macros/s/AKfy.../exec"></div>'+
+    '    <div class="ss-f"><label>Shared token (matches TOKEN in the script)</label><input type="text" id="ssToken" placeholder="the long random string"></div>'+
+    '    <div class="ss-f"><label>Auto-sync seconds (min 10)</label><input type="text" id="ssInterval" class="plain" inputmode="numeric" placeholder="45"></div>'+
+    '    <div class="ss-f"><label>Change PIN (leave blank to keep)</label><input type="password" id="ssNewPin" class="plain" inputmode="numeric" autocomplete="off"></div>'+
+    '    <label style="display:flex;align-items:center;gap:9px;font-size:13px;color:#e8f0ec;margin:4px 0 2px;cursor:pointer">'+
+    '      <input type="checkbox" id="ssEnabled" style="width:16px;height:16px;accent-color:#2e9e6b"> Sync enabled</label>'+
+    '    <div class="ss-msg" id="ssSaveMsg"></div>'+
+    '    <div class="ss-note" id="ssStatusNote"></div>'+
+    '    <div class="ss-act">'+
+    '      <button class="ss-btn g" id="ssTest">Test</button>'+
+    '      <button class="ss-btn g" id="ssSyncNow">Sync now</button>'+
+    '      <button class="ss-btn g" id="ssClose">Close</button>'+
+    '      <button class="ss-btn p" id="ssSave">Save</button>'+
+    '    </div>'+
+    '  </div>'+
+    '</div>';
+  document.body.appendChild(ov);
+
+  ov.addEventListener("click",function(e){ if(e.target===ov) closeVault(); });
+  document.getElementById("ssCancel").addEventListener("click",closeVault);
+  document.getElementById("ssClose").addEventListener("click",closeVault);
+  document.getElementById("ssUnlock").addEventListener("click",tryUnlock);
+  document.getElementById("ssPin").addEventListener("keydown",function(e){ if(e.key==="Enter") tryUnlock(); });
+  document.getElementById("ssSave").addEventListener("click",saveVault);
+  document.getElementById("ssTest").addEventListener("click",testConn);
+  document.getElementById("ssSyncNow").addEventListener("click",function(){
+    setSaveMsg("Syncing...",false); reconcileAll(function(err){ setSaveMsg(err?("Failed: "+short(err)):"Sync complete.",!!err); refreshStatusNote(); });
+  });
+
+  refreshDot();
+}
+
+function pinHash(s){ var h=5381; for(var i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i); h=h&0xffffffff; } return String(h); }
+function openVault(){
+  document.getElementById("ssOverlay").classList.add("show");
+  var stored=lget(LS.pin);
+  document.getElementById("ssSetup").textContent=stored?"":"First time: set any PIN below to create your vault.";
+  document.getElementById("ssLockMsg").textContent="";
+  document.getElementById("ssLocked").style.display="block";
+  document.getElementById("ssOpen").style.display="none";
+  var p=document.getElementById("ssPin"); p.value=""; setTimeout(function(){ p.focus(); },30);
+}
+function tryUnlock(){
+  var pin=document.getElementById("ssPin").value.trim();
+  if(!pin){ setLockMsg("Enter a PIN",true); return; }
+  var stored=lget(LS.pin);
+  if(!stored){ lset(LS.pin,pinHash(pin)); openSettings(); return; }
+  if(pinHash(pin)===stored) openSettings(); else setLockMsg("Wrong PIN",true);
+}
+function setLockMsg(m,err){ var el=document.getElementById("ssLockMsg"); el.className="ss-msg "+(err?"err":"ok"); el.textContent=m; }
+function setSaveMsg(m,err){ var el=document.getElementById("ssSaveMsg"); el.className="ss-msg "+(err?"err":"ok"); el.textContent=m; }
+function openSettings(){
+  document.getElementById("ssLocked").style.display="none";
+  document.getElementById("ssOpen").style.display="block";
+  document.getElementById("ssEndpoint").value=endpoint();
+  document.getElementById("ssToken").value=token();
+  document.getElementById("ssInterval").value=interval();
+  document.getElementById("ssNewPin").value="";
+  document.getElementById("ssEnabled").checked=(lget(LS.enabled)==="1");
+  document.getElementById("ssSaveMsg").textContent="";
+  refreshStatusNote();
+}
+function refreshStatusNote(){
+  var n=document.getElementById("ssStatusNote"); if(!n) return;
+  var parts=[];
+  parts.push("Last sync: "+(SS.lastSync?SS.lastSync.toLocaleString():"never"));
+  if(SS.lastError) parts.push("Last error: "+SS.lastError);
+  var sc=SS.snap.shield?Object.keys(SS.snap.shield).length:0;
+  var mc=SS.snap.midstay?Object.keys(SS.snap.midstay).length:0;
+  parts.push("Tracked rows: "+mc+" mid-stay, "+sc+" shield");
+  n.innerHTML=esc(parts.join("  |  "));
+}
+function saveVault(){
+  var ep=document.getElementById("ssEndpoint").value.trim();
+  var tk=document.getElementById("ssToken").value.trim();
+  var iv=parseInt(document.getElementById("ssInterval").value.trim(),10);
+  var np=document.getElementById("ssNewPin").value.trim();
+  var en=document.getElementById("ssEnabled").checked;
+  lset(LS.endpoint,ep); lset(LS.token,tk);
+  lset(LS.interval,(iv&&iv>=10)?String(iv):"45");
+  lset(LS.enabled, en?"1":"0");
+  if(np) lset(LS.pin,pinHash(np));
+  setSaveMsg("Saved.",false);
+  refreshDot(); startPolling();
+  if(en && ep && tk){ setTimeout(function(){ reconcileAll(function(){ refreshStatusNote(); }); },300); }
+}
+function testConn(){
+  var url=document.getElementById("ssEndpoint").value.trim();
+  var tk=document.getElementById("ssToken").value.trim();
+  if(!url){ setSaveMsg("Enter the web app URL",true); return; }
+  setSaveMsg("Testing...",false);
+  var full=url+(url.indexOf("?")===-1?"?":"&")+"grid=shield&token="+encodeURIComponent(tk)+"&_="+Date.now();
+  fetch(full,{method:"GET"}).then(function(r){return r.json();})
+    .then(function(res){ if(res.ok) setSaveMsg("Connected. "+(res.rows?res.rows.length:0)+" shield rows visible.",false); else setSaveMsg("Rejected: "+(res.error||"unknown"),true); })
+    .catch(function(err){ setSaveMsg("Failed: "+short(err),true); });
+}
+function closeVault(){ document.getElementById("ssOverlay").classList.remove("show"); }
+
+// ---------- status helpers ----------
+function setStatus(kind,text){
+  SS.status=kind; SS.statusText=text;
+  refreshDot();
+}
+function refreshDot(){
+  var d=document.getElementById("ssDot"); var l=document.getElementById("ssLabel");
+  if(!d) return;
+  if(!enabled()){ d.className="ss-dot"; if(l) l.textContent="Sheets sync"; return; }
+  var k=SS.status||"on";
+  d.className="ss-dot "+(k==="busy"?"busy":k==="off"?"off":"on");
+  if(l) l.textContent = SS.status==="busy"?"Syncing...":(SS.status==="off"?"Sync offline":"Sheets synced");
+}
+function updateFoot(){ refreshStatusNote(); refreshDot(); }
+
+var _toastT=null;
+function toast(msg,err){
+  try{ if(window.toast && window.toast!==toast){ window.toast(msg); return; } }catch(e){}
+  // fallback tiny toast
+  var id="ssToast", t=document.getElementById(id);
+  if(!t){ t=document.createElement("div"); t.id=id;
+    t.style.cssText="position:fixed;bottom:64px;right:16px;z-index:9002;background:#1b2f26;color:#e8f0ec;border:1px solid #274437;border-radius:10px;padding:10px 14px;font:13px sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:320px";
+    document.body.appendChild(t); }
+  t.style.borderColor=err?"#d1685f":"#274437"; t.textContent=msg; t.style.display="block";
+  clearTimeout(_toastT); _toastT=setTimeout(function(){ t.style.display="none"; },3200);
+}
+function short(e){ var m=String(e&&e.message?e.message:e); return m.length>70?m.slice(0,70)+"...":m; }
+
+// ---------- boot ----------
+function boot(){
+  injectUI();
+  startPolling();
+  if(enabled()) setTimeout(function(){ reconcileAll(function(){ refreshStatusNote(); }); }, 1800);
+}
+if(document.readyState==="complete"||document.readyState==="interactive") setTimeout(boot,600);
+else document.addEventListener("DOMContentLoaded",function(){ setTimeout(boot,600); });
+
+window.SHEETSYNC={ reconcile:reconcile, reconcileAll:reconcileAll, state:SS, grids:GRIDS };
+
+}catch(err){ try{ console.error("SHEETSYNC failed to load",err); }catch(e){} }
+})();
 
 </script>
 </body>
