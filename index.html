@@ -807,6 +807,7 @@ function ensureExtraProps(){
 }
 function migrate(){
   ensureExtraProps();
+  upsSeedImport();
   const s=db("settings",{});
   if(s.seedVersion===SEED_VERSION) return;
   ["sops","workflows","guestComms","quickReplies","faqs","resources"].forEach(k=>{
@@ -4141,7 +4142,7 @@ function calItem(kind,id){
   if(kind==="serv"){ const s=db("servicing",[]).find(x=>x.id===id); if(!s)return null; return {title:(s.type||"Servicing")+": "+propName(s.property),date:s.nextDue,details:(s.vendor||"")+" "+(s.notes||"")}; }
   if(kind==="maint"){ const m=db("maintenance",[]).find(x=>x.id===id); if(!m)return null; return {title:(m.trade||"Maintenance")+": "+(m.issue||"")+(m.property?" ["+propName(m.property)+"]":""),date:m.due,details:(m.contractor||"")+" "+(m.notes||"")}; }
   if(kind==="claim"){ const c=db("shieldClaims",[]).find(x=>x.id===id); if(!c)return null; return {title:"Guesty Shield claim deadline: "+(c.reservationCode||"claim"),date:claimDeadline(c),details:"Submit within 15 days of check-out ("+(c.checkOut||"")+"). "+propName(c.listing)}; }
-  if(kind==="upsell"){ const r=upsById(id); if(!r)return null; const d=upsDue(r); return {title:"Upsell: "+upsName(r)+" ("+r.guest+")",date:d.date,details:upsCalDesc(r).replace(/\n/g," | ")}; }
+  if(kind==="upsell"){ const r=upsById(id); if(!r)return null; const d=upsDue(r); return {title:"Upsell: "+upsName(r)+" ("+upsWho(r)+")",date:d.date,details:upsCalDesc(r).replace(/\n/g," | ")}; }
   return null;
 }
 function calBtns(kind,id){ return '<span class="calbtns"><button class="calbtn" onclick="event.stopPropagation();gcalOpen(\''+kind+'\',\''+id+'\')" title="Add to Google Calendar">Cal</button><button class="calbtn" onclick="event.stopPropagation();icsDownload(\''+kind+'\',\''+id+'\')" title="Download .ics">ics</button></span>'; }
@@ -4155,7 +4156,7 @@ function agendaItems(){
   const items=[];
   db("tasks",[]).filter(t=>t.status!=="done"&&t.due).forEach(t=>items.push({date:t.due,kind:"task",id:t.id,label:t.title,sub:propName(t.property),tone:t.priority==="P1"?"alert":t.priority==="P2"?"warn":""}));
   db("servicing",[]).filter(s=>s.status!=="Done"&&s.nextDue).forEach(s=>items.push({date:s.nextDue,kind:"serv",id:s.id,label:(s.type||"Servicing"),sub:propName(s.property),tone:"info"}));
-  try{ db("upsells",[]).filter(upsOpen).forEach(r=>{ const d=upsDue(r).date; if(d) items.push({date:d,kind:"upsell",id:r.id,label:"Upsell: "+upsName(r),sub:(r.guest||"")+" / "+upsPropLabel(r),tone:"info"}); }); }catch(e){}
+  try{ db("upsells",[]).filter(upsOpen).forEach(r=>{ const d=upsDue(r).date; if(d) items.push({date:d,kind:"upsell",id:r.id,label:"Upsell: "+upsName(r),sub:upsWho(r)+" / "+upsPropLabel(r),tone:"info"}); }); }catch(e){}
   return items.sort((a,b)=>a.date.localeCompare(b.date));
 }
 function agendaBucket(ymd){ const today=todayAU(); if(ymd<today)return"Overdue"; if(ymd===today)return"Today"; if(ymd===dateAdd(today,1))return"Tomorrow"; if(ymd<=dateAdd(today,7))return"This week"; return"Upcoming"; }
@@ -4815,17 +4816,19 @@ function upsFmt(d){ if(!d) return "no date"; try{ return new Date(d+"T00:00:00")
 function upsPropLabel(r){ return r.propertyId?propName(r.propertyId):(r.propertyText||"No property set"); }
 function upsResolveProp(txt){ const t=String(txt||"").trim().toLowerCase(); if(!t) return ""; const hit=props().find(p=>String(p.nickname||"").trim().toLowerCase()===t); return hit?hit.id:""; }
 function upsTotal(r){ return (Number(r.price)||0)*(Number(r.qty)||1); }
+function upsPriceKnown(r){ return r.price!==null && r.price!==undefined && r.price!==""; }
+function upsWho(r){ return r.guest||r.code||"Guest"; }
 function upsName(r){ let n=r.itemName||"Upsell"; if(r.time) n+=", "+r.time; return n; }
-function upsMoney(r){ const t=upsTotal(r); return t===0?"Complimentary":money(t); }
+function upsMoney(r){ if(r.kind==="link") return "Tour link"; if(!upsPriceKnown(r)) return "Price not set"; const t=upsTotal(r); return t===0?"Complimentary":money(t); }
 
 /* ---------- SOP state ---------- */
-function upsSteps(r){ return UPS_STEPS.filter(s=>!(s[0]==="paid"&&upsTotal(r)===0)); }
+function upsSteps(r){ if(r.kind==="link") return UPS_STEPS.filter(s=>s[0]==="requested"||s[0]==="approved"); return UPS_STEPS.filter(s=>!(s[0]==="paid"&&upsPriceKnown(r)&&upsTotal(r)===0)); }
 function upsDone(r,k){ return !!(r.steps&&r.steps[k]); }
 function upsNext(r){ const s=upsSteps(r).find(x=>!upsDone(r,x[0])); return s?s[0]:null; }
 function upsOpen(r){ return !r.cancelled && upsNext(r)!==null; }
 function upsStatus(r){
   if(r.cancelled) return {key:"cancelled",label:"Declined or cancelled",tone:"mut"};
-  const n=upsNext(r); if(!n) return {key:"done",label:"Completed",tone:"ok"};
+  const n=upsNext(r); if(!n) return {key:"done",label:r.kind==="link"?"Approved (tour link)":"Completed",tone:"ok"};
   const w=UPS_WAIT[n]; return {key:n,label:w[0],tone:w[1]};
 }
 
@@ -4877,7 +4880,7 @@ function upsDelete(id){ confirmModal("Delete this upsell? You can undo it from R
 function upsMessage(r){
   const L=["Hi Julie, upsell to set up:",""];
   L.push(upsName(r)+((Number(r.qty)||1)>1?" x"+r.qty:""));
-  L.push("Property: "+upsPropLabel(r)); L.push("Guest: "+r.guest);
+  L.push("Property: "+upsPropLabel(r)); if(r.guest) L.push("Guest: "+r.guest); if(r.code) L.push("Reservation: "+r.code);
   if(r.in||r.out) L.push("Stay: "+upsFmt(r.in)+" to "+upsFmt(r.out));
   if(r.kind==="early"&&r.requestedTime) L.push("Guest would like to arrive from: "+r.requestedTime);
   else if(r.kind==="late"&&r.requestedTime) L.push("Guest would like to leave by: "+r.requestedTime);
@@ -4891,27 +4894,27 @@ function upsCopyMsg(id){ const r=upsById(id); if(!r) return; copyText(upsMessage
 function upsNotifyJulie(id){
   const list=upsList(); const r=list.find(x=>x.id===id); if(!r) return;
   const t=upsTarget(r);
-  notifPush("Julie","Upsell to set up: "+upsName(r)+" for "+r.guest+" at "+upsPropLabel(r)+(t?", needed "+upsFmt(t):""),{goto:"upsells"});
+  notifPush("Julie","Upsell to set up: "+upsName(r)+" for "+upsWho(r)+" at "+upsPropLabel(r)+(t?", needed "+upsFmt(t):""),{goto:"upsells"});
   r.hkNotified=nowISO(); r.hkNotifiedBy=currentUserName(); r.updated=nowISO(); upsSaveList(list); upsRerender();
   toast("Julie notified in the hub. Copy the message too if she is on WhatsApp.");
 }
 
 /* ---------- calendar reminders ---------- */
-function upsCalDesc(r){ const d=upsDue(r); return [d.what+" "+upsFmt(d.date),"Guest: "+r.guest,"Property: "+upsPropLabel(r),"Stay: "+upsFmt(r.in)+" to "+upsFmt(r.out),r.details?"Notes: "+r.details:""].filter(Boolean).join("\n"); }
-function upsGcal(id){ const r=upsById(id); if(!r) return; const d=upsDue(r); if(!d.date){ toast("Add a reminder date first."); return; } window.open(gcalUrl("Upsell: "+upsName(r)+" ("+r.guest+")",d.date,upsCalDesc(r)),"_blank"); }
+function upsCalDesc(r){ const d=upsDue(r); return [d.what+" "+upsFmt(d.date),(r.guest?"Guest: "+r.guest:""),(r.code?"Reservation: "+r.code:""),"Property: "+upsPropLabel(r),"Stay: "+upsFmt(r.in)+" to "+upsFmt(r.out),r.details?"Notes: "+r.details:""].filter(Boolean).join("\n"); }
+function upsGcal(id){ const r=upsById(id); if(!r) return; const d=upsDue(r); if(!d.date){ toast("Add a reminder date first."); return; } window.open(gcalUrl("Upsell: "+upsName(r)+" ("+upsWho(r)+")",d.date,upsCalDesc(r)),"_blank"); }
 function upsIcsBlock(r){
   const d=upsDue(r); if(!d.date) return "";
   const x=t=>String(t||"").replace(/\\/g,"\\\\").replace(/([,;])/g,"\\$1").replace(/\r?\n/g,"\\n");
   const stamp=new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,"");
   return ["BEGIN:VEVENT","UID:"+r.id+"-upsell@tropicalstays","DTSTAMP:"+stamp,"DTSTART;VALUE=DATE:"+d.date.replace(/-/g,""),"DTEND;VALUE=DATE:"+dateAdd(d.date,1).replace(/-/g,""),
-    "SUMMARY:"+x("Upsell: "+upsName(r)+" ("+r.guest+")"),"DESCRIPTION:"+x(upsCalDesc(r)),
+    "SUMMARY:"+x("Upsell: "+upsName(r)+" ("+upsWho(r)+")"),"DESCRIPTION:"+x(upsCalDesc(r)),
     "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+x("Upsell reminder"),"TRIGGER:PT9H","END:VALARM","END:VEVENT"].join("\r\n");
 }
 function upsIcsFile(blocks,name,calName){
   const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Tropical Stays//Ops Hub//EN"].concat(calName?["X-WR-CALNAME:"+calName]:[]).concat(blocks).concat(["END:VCALENDAR"]).join("\r\n");
   const b=new Blob([ics],{type:"text/calendar"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=name; a.click();
 }
-function upsIcs(id){ const r=upsById(id); if(!r) return; const blk=upsIcsBlock(r); if(!blk){ toast("Add a reminder date first."); return; } upsIcsFile([blk],"upsell-"+String(r.guest||"guest").replace(/[^a-z0-9]+/gi,"-").toLowerCase()+".ics"); toast("Calendar file downloaded. It alerts at 9am on the day."); }
+function upsIcs(id){ const r=upsById(id); if(!r) return; const blk=upsIcsBlock(r); if(!blk){ toast("Add a reminder date first."); return; } upsIcsFile([blk],"upsell-"+String(upsWho(r)).replace(/[^a-z0-9]+/gi,"-").toLowerCase()+".ics"); toast("Calendar file downloaded. It alerts at 9am on the day."); }
 function upsIcsAll(){ const blocks=upsList().filter(upsOpen).map(upsIcsBlock).filter(Boolean); if(!blocks.length){ toast("No open upsells with a reminder date."); return; } upsIcsFile(blocks,"tropical-stays-upsell-reminders.ics","Tropical Stays Upsells"); toast(blocks.length+" reminders exported. Import into your phone calendar."); }
 
 /* ---------- catalog editor ---------- */
@@ -4961,12 +4964,12 @@ function upsForm(id,prefill){
   upsCtx={id:id||null,manualPrice:!!id,manualRemind:false,cat:cat};
   const it=upsItemByCat(cat,r.itemId)||cat[0];
   const opts=it.options||[]; const optSel=opts.find(o=>o.k===r.optionKey)||opts[0]||null;
-  const priceVal=(id&&r.price!=null)?r.price:(optSel?optSel.price:it.price);
+  const priceVal=id?(r.price==null?"":r.price):(optSel?optSel.price:it.price);
   const propVal=r.propertyId?propName(r.propertyId):(r.propertyText||"");
   const propList=props().slice().sort((a,b)=>String(a.nickname||"").localeCompare(String(b.nickname||""))).map(p=>'<option value="'+esc(p.nickname||"")+'"></option>').join("");
   const body=
     '<div class="field"><label>Upsell</label><select class="inp" id="up_item" onchange="upsFormSync(\'item\')">'+cat.map(c=>'<option value="'+esc(c.id)+'"'+(c.id===it.id?" selected":"")+'>'+esc(c.name)+'</option>').join("")+'</select></div>'
-    +'<div class="field" id="up_optwrap"><label>Option</label><select class="inp" id="up_opt" onchange="upsFormSync(\'opt\')">'+opts.map(o=>'<option value="'+esc(o.k)+'"'+(optSel&&o.k===optSel.k?" selected":"")+'>'+esc(o.label+" · "+o.time+" · "+money(o.price))+'</option>').join("")+'</select></div>'
+    +'<div class="field" id="up_optwrap"><label>Option</label><select class="inp" id="up_opt" onchange="upsFormSync(\'opt\')">'+((id&&r.itemId&&!r.optionKey&&opts.length)?'<option value="" selected>Not set</option>':"")+opts.map(o=>'<option value="'+esc(o.k)+'"'+(optSel&&o.k===optSel.k&&!(id&&r.itemId&&!r.optionKey)?" selected":"")+'>'+esc(o.label+" · "+o.time+" · "+money(o.price))+'</option>').join("")+'</select></div>'
     +'<div class="note" id="up_offer" style="margin:0 0 12px;display:none"></div>'
     +'<div class="row2"><div class="field"><label>Guest name</label><input class="inp" id="up_guest" autocomplete="off" value="'+esc(r.guest||"")+'"></div>'
     +'<div class="field"><label>Reservation code (optional)</label><input class="inp" id="up_code" autocomplete="off" value="'+esc(r.code||"")+'"></div></div>'
@@ -5010,17 +5013,17 @@ function upsFormSync(src){
 }
 function upsSaveForm(){
   const it=upsItemByCat(upsCtx.cat,val("up_item")); if(!it){ toast("Pick an upsell."); return; }
-  const guest=val("up_guest").trim(); if(!guest){ toast("Add the guest name."); return; }
+  const guest=val("up_guest").trim(); if(!guest && !val("up_code").trim()){ toast("Add the guest name or the reservation code."); return; }
   const inD=val("up_in"), outD=val("up_out"); if(inD&&outD&&outD<inD){ toast("Check-out is before check-in. Check the dates."); return; }
   const opt=(it.options||[]).find(o=>o.k===val("up_opt"))||null;
   const timing=(it.kind==="early"||it.kind==="late");
   const qty=it.qty?Math.max(1,parseInt(val("up_qty"),10)||1):1;
   const propTxt=val("up_prop").trim(); const pid=upsResolveProp(propTxt);
-  const obj={itemId:it.id,itemName:it.name,kind:it.kind||"item",optionKey:opt?opt.k:"",optionLabel:opt?opt.label:"",time:opt?opt.time:"",qty:qty,price:Number(val("up_price"))||0,
+  const obj={itemId:it.id,itemName:it.name,kind:it.kind||"item",optionKey:opt?opt.k:"",optionLabel:opt?opt.label:"",time:opt?opt.time:"",qty:qty,price:(val("up_price")===""?null:(Number(val("up_price"))||0)),
     guest:guest,code:val("up_code").trim(),propertyId:pid,propertyText:pid?"":propTxt,in:inD,out:outD,serviceDate:timing?"":val("up_svc"),
     requestedTime:timing?val("up_time").trim():"",details:val("up_details").trim(),notes:val("up_notes").trim(),via:val("up_via"),remindOn:val("up_remind")};
   if(!obj.remindOn) obj.remindOn=upsCalcRemind(obj.kind,obj.in,obj.out,obj.serviceDate,it.lead);
-  obj.title=upsName(obj)+" for "+guest;
+  obj.title=upsName(obj)+" for "+upsWho(obj);
   const list=upsList();
   if(upsCtx.id){
     const i=list.findIndex(x=>x.id===upsCtx.id); if(i<0){ closeModal(); return; }
@@ -5034,6 +5037,126 @@ function upsSaveForm(){
   toast(obj.remindOn?"Saved. Reminder set for "+upsFmt(obj.remindOn)+".":"Saved. Add a check-in date so a reminder can be set.");
 }
 function upsAddAnother(id){ const r=upsById(id); if(!r) return; upsForm(null,{guest:r.guest,code:r.code,propertyId:r.propertyId,propertyText:r.propertyText,in:r.in,out:r.out}); }
+
+
+/* ---------- import from a portal upsell export (.csv) ---------- */
+const UPS_IMPORT_SEED_ID="upsell_export_2026_09_21";
+const UPS_IMPORT_SEED_CUTOFF="2026-09-21";
+const UPS_IMPORT_SEED_FILE="Upsell_Export_9_21_26.csv";
+const UPS_IMPORT_CSV=`Scheduled date,Confirmed date,Upsell nickname,Type,Stage,Price,Quantity,Notes,Reservation confirmation code,Property
+9/28/26 10:00pm,9/20/26 01:56pm,Default: Late Check-out,request,approved,125,1,As discussed on Airbnb app,HMF4BXZ9BY,5/42 Moore Str TB
+9/30/26 10:00pm,9/17/26 05:54pm,Default: Late Check-out,request,approved,125,1,Late check-out,BC-Ppn4lYGXz,207  Harbour Lights
+10/16/26 01:00pm,9/17/26 07:19am,Cot,request,requested,25,1,,HMQSJTHMCA,817 Cairns One  1
+10/16/26 01:00pm,9/17/26 07:19am,High Chair,request,requested,,,,HMQSJTHMCA,817 Cairns One  1
+9/30/26 10:00pm,9/16/26 02:50pm,Default: Late Check-out,request,requested,,,Our flight is at 7.30pm,BC-Ppn4lYGXz,207  Harbour Lights
+9/26/26 01:00pm,9/16/26 01:28pm,Default: Early Check-in,request,requested,50,1,"11am would be preferable, if possible",BC-Ppn4lYGXz,207  Harbour Lights
+10/05/26 01:00pm,9/16/26 09:38am,Kuranda Scenic Railway Day Trip from Cairns,link,approved,,,,HMPH4QXQKW,4/349-351 Lake Stree
+10/07/26 01:00pm,9/12/26 06:58am,Cot,request,approved,25,1,,HMS2CBEAT5,207  Harbour Lights
+6/11/27 01:00pm,9/08/26 04:18am,Cairns: All Inclusive Waterfalls and Rainforest Tour,link,approved,,,,HMBCS58KRE,250 Cairns One  1
+10/01/26 01:00pm,9/07/26 08:07pm,Default: Early Check-in,request,requested,175,1,"We've got an early flight so would love an earlier check-in, please! :)",HM9FWCKE4Q,250 Cairns One  1
+10/04/26 10:00pm,9/07/26 08:05pm,Default: Late Check-out,request,requested,125,1,"Late flight, 6 PM checkout would be perfect please :)",HM9FWCKE4Q,250 Cairns One  1
+9/25/26 01:00pm,9/05/26 07:02pm,Default: Early Check-in,request,requested,50,1,"We leave Port Douglas at 11am heading for Cairns., by shuttle bus. Hoping we can come straight to Palm View. Thank you",HMYQBBJNYH,250 Cairns One  1
+9/29/26 01:00pm,8/29/26 06:49pm,Hartley’s Crocodile Adventures Half-Day Tour from Cairns,link,approved,,,,HMZAFZCD4F,817 Cairns One  1
+9/29/26 01:00pm,8/29/26 06:47pm,Kuranda Scenic Railway Day Trip from Cairns,link,approved,,,,HMZAFZCD4F,817 Cairns One  1
+9/29/26 01:00pm,8/29/26 06:46pm,Daintree Rainforest and Cape Tribulation Day Tour from Cairns,link,approved,,,,HMZAFZCD4F,817 Cairns One  1
+9/29/26 01:00pm,8/25/26 10:30pm,Cairns Rainforest River Tubing,link,approved,,,,HMZAFZCD4F,817 Cairns One  1
+9/22/26 01:00pm,8/17/26 06:31pm,Daintree Rainforest and Cape Tribulation Full Day Tour,link,approved,,,,HMYQBBJNYH,250 Cairns One  1
+9/22/26 01:00pm,8/17/26 06:19pm,Daintree Rainforest and Cape Tribulation Full Day Tour,link,approved,,,,HMYQBBJNYH,250 Cairns One  1
+10/15/26 01:00pm,8/11/26 09:34pm,Default: Early Check-in,request,requested,50,1,Preferably between 11am and 12pm. Thanks.,BC-W1JLgv3Kn,215 Harbour lights
+9/25/26 01:00pm,6/25/26 05:08am,Default: Early Check-in,request,denied,50,1,"Hi there, we would like to check in at 12",BC-ArQBNNyq3,327 Harbour Lights
+`;
+function upsParseCsv(text){
+  const rows=[]; let row=[], f="", q=false; text=String(text||"").replace(/^\uFEFF/,"");
+  for(let i=0;i<text.length;i++){ const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){ f+='"'; i++; } else q=false; } else f+=c; }
+    else if(c==='"') q=true;
+    else if(c===","){ row.push(f); f=""; }
+    else if(c==="\n"||c==="\r"){ if(c==="\r"&&text[i+1]==="\n") i++; row.push(f); f=""; if(row.some(x=>x!=="")) rows.push(row); row=[]; }
+    else f+=c;
+  }
+  row.push(f); if(row.some(x=>x!=="")) rows.push(row);
+  if(!rows.length) return [];
+  const hdr=rows[0].map(h=>h.trim().toLowerCase());
+  return rows.slice(1).map(r=>{ const o={}; hdr.forEach((h,i)=>{ o[h]=(r[i]||"").trim(); }); return o; });
+}
+function upsCsvDate(s){ const m=/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/.exec(String(s||"").trim()); if(!m) return ""; let y=Number(m[3]); if(y<100) y+=2000; return y+"-"+String(m[1]).padStart(2,"0")+"-"+String(m[2]).padStart(2,"0"); }
+function upsImportItem(nick){
+  const n=String(nick||"").replace(/^Default:\s*/i,"").trim(); const l=n.toLowerCase();
+  if(l==="early check-in") return "cat_early";
+  if(l==="late check-out") return "cat_late";
+  if(l==="cot") return "cat_cot";
+  if(l==="high chair") return "cat_highchair";
+  if(l.indexOf("romance package")===0) return "cat_romance";
+  if(l.indexOf("birthday")>=0) return "cat_birthday";
+  return "";
+}
+/* Turns export rows into hub records. Only rows scheduled on or after the cutoff. Never invents a guest name or stay dates. */
+function upsBuildImport(text,cutoff,fileName){
+  const cat=upsCatalog(); const have=new Set(upsList().map(r=>r.srcKey).filter(Boolean));
+  const out={add:[],past:0,dup:0,nodate:0,noprop:[]};
+  upsParseCsv(text).forEach(row=>{
+    const sched=upsCsvDate(row["scheduled date"]); if(!sched){ out.nodate++; return; }
+    if(sched<cutoff){ out.past++; return; }
+    const nick=row["upsell nickname"]||""; const code=row["reservation confirmation code"]||"";
+    const srcKey=[code,nick,row["scheduled date"],row["confirmed date"]].join("|");
+    if(have.has(srcKey)){ out.dup++; return; }
+    have.add(srcKey);
+    const id=upsImportItem(nick); const ci=id?cat.find(c=>c.id===id):null;
+    const isLink=(row["type"]||"").toLowerCase()==="link" && !ci;
+    const kind=ci?(ci.kind||"item"):(isLink?"link":"item");
+    const itemName=ci?ci.name:nick.replace(/^Default:\s*/i,"").trim();
+    const pv=row["price"]; let price=(pv===""||isNaN(Number(pv)))?null:Number(pv);
+    if(price===null && ci && Number(ci.price)===0) price=0;
+    const opt=(ci&&ci.options&&price!==null)?ci.options.find(o=>Number(o.price)===price):null;
+    const qty=Math.max(1,parseInt(row["quantity"],10)||1);
+    const propTxt=String(row["property"]||"").replace(/\s+/g," ").trim();
+    let pid=upsResolveProp(propTxt); if(!pid){ const t=propTxt.toLowerCase(); const hit=props().find(p=>String(p.nickname||"").replace(/\s+/g," ").trim().toLowerCase()===t); pid=hit?hit.id:""; }
+    if(!pid) out.noprop.push(propTxt);
+    const stage=(row["stage"]||"").toLowerCase(); const at=nowISO(); const by="Export import";
+    const steps={requested:{at:at,by:by}};
+    if(stage==="approved"||stage==="delivered") steps.approved={at:at,by:by};
+    if(stage==="delivered") steps.completed={at:at,by:by};
+    const rec={id:uid("ups"),created:at,createdBy:by,updated:at,srcKey:srcKey,
+      itemId:ci?ci.id:"imp_"+itemName.toLowerCase().replace(/[^a-z0-9]+/g,"_").slice(0,40),itemName:itemName,kind:kind,
+      optionKey:opt?opt.k:"",optionLabel:opt?opt.label:"",time:opt?opt.time:"",qty:qty,price:price,
+      guest:"",code:code,propertyId:pid,propertyText:pid?"":propTxt,in:kind==="early"?sched:"",out:kind==="late"?sched:"",
+      serviceDate:(kind==="early"||kind==="late")?"":sched,requestedTime:"",details:row["notes"]||"",via:"",
+      notes:"Imported from "+(fileName||"an upsell export")+". Export stage: "+(row["stage"]||"none")+". Type: "+(row["type"]||"none")+". Confirmed date: "+(row["confirmed date"]||"none")+".",
+      steps:steps,cancelled:stage==="denied"};
+    rec.remindOn=kind==="link"?"":upsCalcRemind(kind,rec.in,rec.out,rec.serviceDate,ci?ci.lead:2);
+    rec.title=upsName(rec)+" for "+upsWho(rec);
+    out.add.push(rec);
+  });
+  return out;
+}
+function upsCommitImport(recs){ const list=upsList(); recs.forEach(r=>list.push(r)); upsSaveList(list); }
+/* One-time load of the export that came with this build. Guarded by a settings flag so deleted rows do not come back. */
+function upsSeedImport(){
+  try{
+    const s=db("settings",{})||{}; s.upsImports=s.upsImports||{};
+    if(s.upsImports[UPS_IMPORT_SEED_ID]) return;
+    const res=upsBuildImport(UPS_IMPORT_CSV,UPS_IMPORT_SEED_CUTOFF,UPS_IMPORT_SEED_FILE);
+    if(res.add.length) upsCommitImport(res.add);
+    s.upsImports[UPS_IMPORT_SEED_ID]=nowISO(); save("settings",s);
+  }catch(e){ console.warn("upsell seed import failed",e.message); }
+}
+let upsImportPending=null;
+function upsImportPick(inp){
+  const f=inp.files&&inp.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=function(){
+    const res=upsBuildImport(String(rd.result||""),todayAU(),f.name); upsImportPending=res; inp.value="";
+    const rows=res.add.map(r=>'<div class="rowline"><div class="grow"><div>'+esc(r.itemName)+' <span class="muted mono" style="font-size:10px">'+esc(r.code)+'</span></div><div class="muted" style="font-size:11px">'+esc(upsPropLabel(r))+' &middot; '+esc(upsFmt(upsTarget(r)))+(r.cancelled?" &middot; denied":"")+'</div></div></div>').join("");
+    openModal("Import upsells",
+      '<div style="font-size:13px;margin-bottom:10px"><b>'+res.add.length+'</b> to add. '+res.dup+' already in the hub, '+res.past+' scheduled before today and skipped'+(res.nodate?', '+res.nodate+' with no date':'')+'.</div>'
+      +(res.noprop.length?'<div class="note" style="margin:0 0 10px">Property not matched for: '+esc(res.noprop.join(", "))+'. They import with the name as text.</div>':'')
+      +'<div style="max-height:44vh;overflow:auto">'+(rows||'<div class="muted">Nothing new to add.</div>')+'</div>'
+      +'<div class="note">The export has no guest name or stay dates. Records are keyed by reservation code and the scheduled date. Paid, coordinated and completed are left unticked for you to confirm.</div>',
+      '<button class="btn ghost" onclick="closeModal()">Cancel</button>'+(res.add.length?'<button class="btn" onclick="upsImportConfirm()">Add '+res.add.length+' upsells</button>':""));
+  };
+  rd.readAsText(f);
+}
+function upsImportConfirm(){ const res=upsImportPending; if(!res||!res.add.length){ closeModal(); return; } upsCommitImport(res.add); logAct("add","upsells",res.add.length+" upsells imported"); upsImportPending=null; closeModal(); renderPage("upsells"); toast(res.add.length+" upsells imported."); }
 
 /* ---------- filters, search, navigation ---------- */
 function upsSetView(v){ upsState.view=v; renderPage("upsells"); }
@@ -5063,13 +5186,13 @@ function upsKV(k,v){ return (v!==""&&v!=null)?'<div class="rsrow"><div class="rs
 function upsCard(r){
   const open=!!upsState.open[r.id]; const st=upsStatus(r); const u=upsUrgency(r); const nx=upsNext(r); const due=upsDue(r); const tgt=upsTarget(r);
   const tot=upsTotal(r);
-  const payPill=tot===0?'<span class="pill mut">Complimentary</span>':'<span class="pill '+(upsDone(r,"paid")?"ok":"alert")+'">'+money(tot)+' &middot; '+(upsDone(r,"paid")?"Paid":"Unpaid")+'</span>';
+  const payPill=r.kind==="link"?'<span class="pill mut">Tour link</span>':!upsPriceKnown(r)?'<span class="pill warn">Price not set</span>':tot===0?'<span class="pill mut">Complimentary</span>':'<span class="pill '+(upsDone(r,"paid")?"ok":"alert")+'">'+money(tot)+' &middot; '+(upsDone(r,"paid")?"Paid":"Unpaid")+'</span>';
   const urgPill=(u&&(u.key==="past"||u.key==="overdue"||u.key==="today"||u.key==="tomorrow"))?'<span class="pill '+u.tone+'">'+esc(u.label)+'</span>':"";
   const search=[r.title,upsPropLabel(r),r.code,r.details,r.notes,r.itemName].join(" ").toLowerCase();
   const header='<div class="resh" onclick="upsToggle(\''+r.id+'\')">'
     +'<span class="caret'+(open?" open":"")+'">&#9656;</span>'
     +'<div style="flex:1;min-width:150px"><div style="font-weight:600">'+esc(upsName(r))+((Number(r.qty)||1)>1?' <span class="muted">x'+esc(r.qty)+'</span>':"")+'</div>'
-      +'<div class="muted" style="font-size:11.5px;margin-top:2px">'+esc(r.guest||"")+' &middot; '+esc(upsPropLabel(r))+'</div></div>'
+      +'<div class="muted" style="font-size:11.5px;margin-top:2px">'+esc(upsWho(r))+' &middot; '+esc(upsPropLabel(r))+'</div></div>'
     +'<div class="muted" style="font-size:11px;min-width:118px">In '+esc(upsFmt(r.in))+'<br>Out '+esc(upsFmt(r.out))+'</div>'
     +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-left:auto"><span class="pill '+st.tone+'">'+esc(st.label)+'</span>'+urgPill+payPill+'</div></div>';
   let dueLine="";
@@ -5089,7 +5212,7 @@ function upsCard(r){
     const log=upsSteps(r).filter(s=>upsDone(r,s[0])).map(s=>s[1]+": "+fmtWhen(r.steps[s[0]].at)+(r.steps[s[0]].by?" ("+r.steps[s[0]].by+")":"")).join("\n");
     more='<div class="resb" style="border-top:1px dashed var(--line);padding-top:10px">'
       +(cat&&cat.offer?'<div class="note" style="margin:0 0 8px"><b>What the guest was offered.</b> '+esc(cat.offer)+'</div>':"")
-      +upsKV("Guest",r.guest)+upsKV("Property",upsPropLabel(r))+upsKV("Reservation code",r.code)
+      +upsKV("Guest",r.guest||"Not in the export, add it when known")+upsKV("Property",upsPropLabel(r))+upsKV("Reservation code",r.code)
       +upsKV("Stay",(r.in||r.out)?upsFmt(r.in)+" to "+upsFmt(r.out):"")
       +upsKV("Option",r.optionLabel?r.optionLabel+(r.time?", "+r.time:""):"")
       +upsKV(r.kind==="early"?"Preferred arrival":"Preferred departure",r.requestedTime)
@@ -5138,7 +5261,7 @@ function upsCalendar(list){
   const ym=upsState.calMonth; const ev=[];
   list.filter(r=>!r.cancelled).forEach(r=>{
     const tgt=upsTarget(r); const st=upsStatus(r); const tone=st.key==="done"?"ok":(st.tone==="mut"?"muted":st.tone);
-    const first=String(r.guest||"").split(" ")[0];
+    const first=String(upsWho(r)).split(" ")[0];
     if(tgt&&tgt.slice(0,7)===ym) ev.push({date:tgt,label:(r.itemName||"Upsell")+" "+first,tone:tone});
     if(upsOpen(r)&&!upsDone(r,"coordinated")&&r.remindOn&&r.remindOn!==tgt&&r.remindOn.slice(0,7)===ym) ev.push({date:r.remindOn,label:"Remind: "+(r.itemName||"Upsell")+" "+first,tone:"muted"});
   });
@@ -5162,6 +5285,9 @@ function upsPhonePanel(){
     +'<div style="font-size:12.5px;color:var(--ink2);margin-bottom:10px">Every upsell gets a reminder date. The nav badge, My Day, the dashboard and the Agenda card all pick it up. To get a phone alert as well, add it to your calendar.</div>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="upsIcsAll()">Export all open reminders (.ics)</button><button class="btn ghost" onclick="csvExport(\'upsells\')">Export upsells to CSV</button></div>'
     +'<div class="note">The .ics file is a snapshot with a 9am alert on each reminder date. Open it on your phone to import. Re-export after adding new upsells, or use the Google Calendar or phone calendar buttons on each card as you go.</div>'
+    +'</div></div><div class="card" style="margin-top:16px"><div class="card-hd"><h3>Import from an upsell export</h3></div><div class="card-bd">'
+    +'<div style="font-size:12.5px;color:var(--ink2);margin-bottom:10px">Choose the .csv export. Only rows scheduled today or later are offered, and anything already in the hub is skipped, so it is safe to re-run.</div>'
+    +'<input type="file" accept=".csv,text/csv" onchange="upsImportPick(this)" class="inp">'
     +'</div></div>';
 }
 function viewUpsells(){
