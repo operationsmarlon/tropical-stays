@@ -622,7 +622,6 @@ textarea.inp{resize:vertical;min-height:64px}
         <div class="clk-div"></div>
         <div class="clk"><div class="z">AEST Cairns</div><div class="t" id="clkAU">--:--:--</div><div class="d" id="dayAU"></div></div>
         <div class="clk-div"></div>
-        <span class="sync" id="syncPill">Sync: <b>local only</b></span>
         <span class="tb-user" id="userChip" style="display:none"></span>
         <button class="tb-elock" id="elockBtn" onclick="toggleEditLock()" title="Toggle read-only edit lock"><svg viewBox="0 0 24 24"><path d="M4 20l1-4L15 6l3 3L8 19z"/><path d="M14 7l3 3"/></svg><span>Editing</span></button>
         <button class="tb-lock" onclick="lockApp()" title="Sign out and lock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Lock</button>
@@ -805,7 +804,27 @@ function ensureExtraProps(){
   extras.forEach(e=>{ if(!list.some(p=>p.id===e.id||norm(p.nickname)===norm(e.nickname))){ list.push(Object.assign({created:nowISO(),updated:nowISO()},e)); ch=true; } });
   if(ch) save("properties",list);
 }
-function migrate(){
+/* SOPs added after the seed. Runs after migrate so a seed refresh cannot wipe them. Flagged so a deleted SOP stays deleted. */
+const EXTRA_SOPS_ID="sops_lost_found_broken_damaged_2026_09_21";
+const EXTRA_SOPS=[
+  {id:"sop_lost_found",task:"Lost & Found Process",system:"SuiteOp",owner:"Housekeeping, then Tropical Stays ops",
+   steps:"1. Housekeeping labels the item with the listing name and the guest check-out date and drops it at the cage, as already done. 2. Housekeeping also creates a task under the department \"Lost & Found\" in SuiteOp for every item found, one task per item. 3. Tropical Stays ops uses that task to follow up with the guest, track postage or collection, and count how many items are actually being left behind. Note: items already in the cage will be removed at the end of the month.",
+   failure:"Item goes into the cage with no SuiteOp task, so nobody follows up with the guest and the item is never returned or counted"},
+  {id:"sop_broken_damaged",task:"Broken & Damaged Items Process",system:"SuiteOp",owner:"Housekeeping, then Tropical Stays ops",
+   steps:"1. Housekeeping reports any broken or damaged item in a SuiteOp task on the day it is discovered, with at least 2 clear photos of the damage (needed for insurance claim assessment where applicable). Keep all the information and photos in that one task so the complete history is in one place. 2. Housekeeping then decides what happens to the item. Clearly cannot be repaired and no significant value: remove it from the listing and dispose of it so the next guest does not find it. Unsure about its value, or it may be repairable: drop it at the cage at 237, label it with the listing name and date, and note this in the same task. Cannot be removed because of its size or another reason: say so in the task and Tropical Stays takes it from there. 3. Tropical Stays ops works from the task to update the owner, organise a replacement quickly, arrange a repair where possible, and submit an insurance claim as soon as possible where required.",
+   failure:"Damage found but not reported the same day, or reported with fewer than 2 photos or spread across messages, so the claim is delayed and the next guest arrives to a damaged item"}
+];
+function ensureExtraSops(){
+  try{
+    const st=db("settings",{})||{}; st.extraSeeds=st.extraSeeds||{};
+    if(st.extraSeeds[EXTRA_SOPS_ID]) return;
+    const list=db("sops",[])||[]; const norm=x=>String(x||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+    EXTRA_SOPS.forEach(e=>{ if(!list.some(r=>r.id===e.id||norm(r.task)===norm(e.task))) list.push(seedRow("sops",e)); });
+    save("sops",list); st.extraSeeds[EXTRA_SOPS_ID]=nowISO(); save("settings",st);
+  }catch(e){ console.warn("extra sops failed",e.message); }
+}
+function migrate(){ try{ migrateCore(); } finally { ensureExtraSops(); } }
+function migrateCore(){
   ensureExtraProps();
   upsSeedImport();
   const s=db("settings",{});
@@ -999,6 +1018,8 @@ const NAV=[
     {k:"coverage",label:"Shift & coverage",icon:"clock",crumb:"Operations"},
     {k:"midstay",label:"Mid-stay cleans",icon:"cal",crumb:"Operations"},
     {k:"upsells",label:"Upsells",icon:"gift",crumb:"Operations",badge:"upsells"},
+    {k:"lostfound",label:"Lost & Found",icon:"box",crumb:"Operations",badge:"lostfound"},
+    {k:"damage",label:"Broken & damaged",icon:"wrench",crumb:"Operations",badge:"damage"},
     {k:"flows",label:"Workflows",icon:"bolt",crumb:"Operations"},
     {k:"maint",label:"Maintenance",icon:"wrench",crumb:"Operations",badge:"maint"},
     {k:"serv",label:"Servicing",icon:"cal",crumb:"Operations",badge:"serv"},
@@ -1082,7 +1103,7 @@ function updateNavBadges(){
   const m=db("maintenance",[]).filter(x=>x.status!=="Done").length;
   const today=todayAU();
   const so=db("servicing",[]).filter(x=>x.status!=="Done"&&x.nextDue&&x.nextDue<today).length;
-  setBadge("tasks",t,tp>0); setBadge("maint",m,db("maintenance",[]).some(x=>x.needsApproval&&x.status!=="Done")); setBadge("serv",so,so>0); try{ setBadge("upsells",upsOpenCount(),upsAttnCount()>0); }catch(e){} try{const nu=notifUnread(currentUserName()); setBadge("notif",nu,nu>0);}catch(e){}
+  setBadge("tasks",t,tp>0); setBadge("maint",m,db("maintenance",[]).some(x=>x.needsApproval&&x.status!=="Done")); setBadge("serv",so,so>0); try{ setBadge("upsells",upsOpenCount(),upsAttnCount()>0); }catch(e){} try{ setBadge("lostfound",caseOpenCount("lostFound"),caseAttn("lostFound")>0); setBadge("damage",caseOpenCount("damage"),caseAttn("damage")>0); }catch(e){} try{const nu=notifUnread(currentUserName()); setBadge("notif",nu,nu>0);}catch(e){}
   document.getElementById("footProps").textContent=db("properties",[]).length;
 }
 function setBadge(id,n,warn){ const el=document.getElementById("nbc_"+id); if(!el)return; if(!n){ el.style.display="none"; return; } el.style.display=""; el.textContent=n; el.classList.toggle("warn",!!warn); }
@@ -1098,7 +1119,7 @@ function renderPage(k){
   document.getElementById("crumb").textContent=meta.crumb;
   document.getElementById("title").textContent=meta.label;
   setActiveNav(k);
-  const map={myday:viewMyDay,daily:viewDaily,transcript:viewTranscript,coverage:viewCoverage,midstay:viewMidstay,upsells:viewUpsells,dash:viewDash,tasks:viewTasks,maint:viewMaint,serv:viewServ,props:viewProps,pipe:viewPipe,
+  const map={myday:viewMyDay,daily:viewDaily,transcript:viewTranscript,coverage:viewCoverage,midstay:viewMidstay,upsells:viewUpsells,lostfound:()=>viewCases("lostFound"),damage:()=>viewCases("damage"),dash:viewDash,tasks:viewTasks,maint:viewMaint,serv:viewServ,props:viewProps,pipe:viewPipe,
     sops:()=>viewGeneric("sops"),flows:()=>viewGeneric("workflows"),guest:()=>viewGeneric("guestComms"),
     quick:()=>viewGeneric("quickReplies"),faqs:()=>viewFaqs(),resources:()=>viewGeneric("resources"),
     team:viewTeam,sheets:viewSheets,eod:viewEOD,reviews:viewReviews,notif:viewNotif,owners:viewOwners,revanalytics:viewReviewsAnalysis,balances:viewBalances,groups:viewGroups,linen:viewLinen,consum:viewConsumables,shield:viewShield,edit:viewEdit,contacts:viewContacts};
@@ -1146,7 +1167,9 @@ const SEARCH_MAP=[
   {store:"consumables",tab:"consum",singular:"Consumable",label:"item",propRef:"property",form:true},
   {store:"users",tab:"team",singular:"Team member",label:"name"},
   {store:"midstay",tab:"midstay",singular:"Mid-stay clean",label:"guest",propRef:"listingId"},
-  {store:"upsells",tab:"upsells",singular:"Upsell",label:"title",propRef:"propertyId",open:id=>upsFocus(id)}
+  {store:"upsells",tab:"upsells",singular:"Upsell",label:"title",propRef:"propertyId",open:id=>upsFocus(id)},
+  {store:"lostFound",tab:"lostfound",singular:"Lost & Found item",label:"item",propRef:"property",open:id=>caseFocus("lostFound",id)},
+  {store:"damage",tab:"damage",singular:"Broken or damaged item",label:"item",propRef:"property",open:id=>caseFocus("damage",id)}
 ];
 function hubRecText(rec,cfg){
   const parts=[];
@@ -1770,6 +1793,7 @@ function viewDash(){
   attn.push(aRow(needAppr.length,"Maintenance awaiting Isabell approval",needAppr.length?"warn":"ok","maint"));
   attn.push(aRow(maintOpen.length,"Open maintenance jobs",maintOpen.length?"info":"ok","maint"));
   try{ const ua=upsAttnCount(); attn.push(aRow(ua,"Upsells to action today or overdue",ua?"warn":"ok","upsells")); }catch(e){}
+  try{ const lf=caseAttn("lostFound"), dm=caseAttn("damage"); attn.push(aRow(lf,"Lost & Found items to follow up",lf?"warn":"ok","lostfound")); attn.push(aRow(dm,"Damage reports needing attention",dm?"alert":"ok","damage")); }catch(e){}
 
   const myDay=overdueTasks.concat(dueToday);
   const dayHTML = myDay.length
@@ -3891,7 +3915,7 @@ function viewTeam(){
    SHEETS SYNC (one-way CSV export, n8n for two-way)
    ============================================================ */
 function viewSheets(){
-  const sets=[["properties","Properties"],["tasks","Tasks"],["dailyRoutines","Daily routines"],["maintenance","Maintenance"],["servicing","Servicing"],["reviews","Reviews"],["eodReports","EOD reports"],["upsells","Upsells"]];
+  const sets=[["properties","Properties"],["tasks","Tasks"],["dailyRoutines","Daily routines"],["maintenance","Maintenance"],["servicing","Servicing"],["reviews","Reviews"],["eodReports","EOD reports"],["upsells","Upsells"],["lostFound","Lost & Found"],["damage","Broken & damaged"]];
   return head("Reporting","Sheets sync",
       "Export any table to CSV and drop it straight into Google Sheets. This is one way for now.")
     +'<div class="card"><div class="card-hd"><h3>Export to CSV</h3></div><div class="card-bd"><div style="display:flex;gap:9px;flex-wrap:wrap">'
@@ -3901,7 +3925,7 @@ function viewSheets(){
 function csvExport(store){
   const rows=db(store,[]); if(!rows.length){ toast("Nothing to export."); return; }
   const cols=[...new Set(rows.flatMap(r=>Object.keys(r)))];
-  const cell=v=>{ v=(v==null)?"":Array.isArray(v)?v.join("; "):(typeof v==="object"?JSON.stringify(v):String(v)); return '"'+v.replace(/"/g,'""')+'"'; };
+  const cell=v=>{ v=(v==null)?"":Array.isArray(v)?v.map(x=>(x&&typeof x==="object")?(x.caption||x.url||x.path||x.name||JSON.stringify(x)):x).join("; "):(typeof v==="object"?JSON.stringify(v):String(v)); return '"'+v.replace(/"/g,'""')+'"'; };
   const csv=[cols.join(",")].concat(rows.map(r=>cols.map(c=>cell(r[c])).join(","))).join("\n");
   const b=new Blob([csv],{type:"text/csv"}); const a=document.createElement("a");
   a.href=URL.createObjectURL(b); a.download="ts-"+store+".csv"; a.click(); toast(store+" exported.");
@@ -5320,6 +5344,170 @@ function upsMyDayCard(){
       return '<div class="rowline"><span class="pill '+u.tone+'">'+esc(u.label)+'</span><div class="grow"><div>'+esc(r.title||upsName(r))+'</div><div class="muted mono" style="font-size:10px">'+esc(upsPropLabel(r))+' &middot; next: '+esc(n?UPS_ACTION[n].replace("Mark ",""):"done")+'</div></div><button class="linkbtn" onclick="upsFocus(\''+r.id+'\')">open</button></div>'; }).join("");
     return '<div style="margin-top:16px">'+card("Upsells to action ("+items.length+")",rows,'<div style="margin-top:10px"><button class="btn ghost sm" onclick="go(\'upsells\')">Open upsells</button></div>')+'</div>';
   }catch(e){ return ""; }
+}
+
+
+/* ============================================================
+   LOST & FOUND and BROKEN & DAMAGED
+   Two case trackers built on the same form engine as Tasks, so property tagging
+   and photo upload (attach field) work the same way. Statuses follow the two SOPs.
+   ============================================================ */
+COLLECTIONS.lostFound={singular:"Lost & Found item",fields:[
+  ["item","What was found","text","","e.g. phone charger, child's toy"],
+  ["property","Property (listing)","propref"],
+  ["checkout","Guest check-out date","date"],
+  ["guest","Guest name (optional)","text"],
+  ["code","Reservation code (optional)","text"],
+  ["status","Status","select","Found|Guest contacted|Postage arranged|Collection arranged|Returned|Unclaimed"],
+  ["returnMethod","Postage or collection","select","|Postage|Collection"],
+  ["suiteop","SuiteOp task (link or reference)","text","","Task under the department Lost & Found"],
+  ["foundBy","Found by","people"],
+  ["attach","Photos & links","attach"],
+  ["notes","Notes (guest follow up, tracking number, pickup details)","textarea"]]};
+COLLECTIONS.damage={singular:"Broken or damaged item",fields:[
+  ["item","Broken or damaged item","text","","e.g. glass coffee table, TV remote"],
+  ["property","Property (listing)","propref"],
+  ["discovered","Date discovered","date"],
+  ["reportedBy","Reported by","people"],
+  ["status","Status","select","Reported|Owner updated|Replacement or repair arranged|Claim submitted|Resolved"],
+  ["disposition","What was done with the item","select","Not decided yet|Disposed of (cannot be repaired, no significant value)|In the cage at 237 (unsure or may be repairable)|Cannot be removed (size or another reason)"],
+  ["claimNeeded","Insurance claim needed","checkbox"],
+  ["needsApproval","Needs Isabell approval (any spend or owner commitment)","checkbox"],
+  ["suiteop","SuiteOp task (link or reference)","text","","One task with the full history"],
+  ["attach","Photos (at least 2 clear photos of the damage) & links","attach"],
+  ["notes","What happened, and repair or replacement notes","textarea"]]};
+
+const CASES={
+  lostFound:{tab:"lostfound",title:"Lost & Found",eyebrow:"Guest belongings",
+    sub:"Every found item gets a record here and a SuiteOp task under the department Lost & Found, so nothing sits in the cage without a follow up.",
+    report:"Report found item",statuses:["Found","Guest contacted","Postage arranged","Collection arranged","Returned","Unclaimed"],closed:["Returned","Unclaimed"],
+    dateField:"checkout",dateLabel:"Check-out",ageWord:"Since check-out",
+    tone:{"Found":"warn","Guest contacted":"info","Postage arranged":"info","Collection arranged":"info","Returned":"ok","Unclaimed":""},
+    empty:"Nothing logged yet. Report each found item here, and create the SuiteOp task under the department Lost & Found.",
+    heroTitle:"Standard operating procedure, lost and found",heroSub:"Three steps from found to returned. Tap to see them.",
+    steps:[["1. Label and drop off","Housekeeping","Label the item with the listing name and guest check-out date and drop it at the cage.","htag-teal"],
+           ["2. Create a SuiteOp task","SuiteOp","Create a task under the department Lost & Found for every item found.","htag-blue"],
+           ["3. Follow up","Ops","Follow up with the guest, track postage or collection, and keep count of how many items are being left behind.","htag-green"]],
+    prefill:function(){ return {status:"Found",checkout:todayAU(),foundBy:currentUserName()}; }},
+  damage:{tab:"damage",title:"Broken & Damaged",eyebrow:"Reports and follow through",
+    sub:"Report on the day it is found, with at least 2 clear photos, all in one SuiteOp task. This tracker keeps the status, photos and claim flags together.",
+    report:"Report damage",statuses:["Reported","Owner updated","Replacement or repair arranged","Claim submitted","Resolved"],closed:["Resolved"],
+    dateField:"discovered",dateLabel:"Discovered",ageWord:"Since discovered",
+    tone:{"Reported":"alert","Owner updated":"warn","Replacement or repair arranged":"info","Claim submitted":"info","Resolved":"ok"},
+    empty:"No damage reported. Log each broken or damaged item on the day it is discovered, with at least 2 clear photos.",
+    heroTitle:"Standard operating procedure, broken and damaged items",heroSub:"Three steps from discovery to resolved. Tap to see them.",
+    steps:[["1. Report the same day","Housekeeping","One SuiteOp task on the day it is discovered, with at least 2 clear photos of the damage and all the information in that one task.","htag-teal"],
+           ["2. Decide what happens to it","Housekeeping","Cannot be repaired and no significant value: remove it from the listing and dispose of it. Unsure of its value or it may be repairable: cage at 237, labelled with listing name and date, noted in the task. Cannot be removed: say so in the task.","htag-gold"],
+           ["3. Follow through","Ops","Update the owner, organise a replacement quickly, arrange a repair where possible, and submit the insurance claim as soon as possible where required.","htag-green"]],
+    prefill:function(){ return {status:"Reported",discovered:todayAU(),reportedBy:currentUserName(),disposition:"Not decided yet"}; }}
+};
+let caseState={lostFound:{status:"open",q:"",open:{}},damage:{status:"open",q:"",open:{}}};
+
+function caseList(key){ return db(key,[])||[]; }
+function caseIsOpen(key,r){ return CASES[key].closed.indexOf(r.status||CASES[key].statuses[0])<0; }
+function caseDate(key,r){ return r[CASES[key].dateField]||""; }
+function casePhotoCount(r){ return (Array.isArray(r.attach)?r.attach:[]).filter(a=>a&&a.kind==="photo").length; }
+function caseAge(key,r){ const d=caseDate(key,r); if(!d) return null; const n=Math.round((new Date(todayAU()+"T00:00:00")-new Date(d+"T00:00:00"))/86400000); return isNaN(n)?null:n; }
+function caseProp(r){ return r.property?propName(r.property):"No property set"; }
+function caseNeedsClaim(r){ return !!r.claimNeeded && r.status!=="Claim submitted" && r.status!=="Resolved"; }
+
+/* counts used by the nav badge and the dashboard */
+function caseAttn(key){
+  const open=caseList(key).filter(r=>caseIsOpen(key,r));
+  if(key==="lostFound") return open.filter(r=>!r.suiteop||(r.status||"Found")==="Found").length;
+  return open.filter(r=>!r.suiteop||casePhotoCount(r)<2||caseNeedsClaim(r)||r.needsApproval).length;
+}
+function caseOpenCount(key){ return caseList(key).filter(r=>caseIsOpen(key,r)).length; }
+
+function caseSetStatus(key,id,st){
+  if(!requireEdit(key)) return;
+  const list=caseList(key); const r=list.find(x=>x.id===id); if(!r) return;
+  r.status=st; r.updated=nowISO(); save(key,list); logAct("edit",key,(r.item||"item")+" now "+st);
+  caseRerender(key); toast("Status set to "+st+".");
+}
+function caseRerender(key){ const p=document.getElementById("page"); const y=p?p.scrollTop:0; renderPage(CASES[key].tab); const p2=document.getElementById("page"); if(p2) p2.scrollTop=y; }
+function caseToggle(key,id){ caseState[key].open[id]=!caseState[key].open[id]; caseRerender(key); }
+function caseFilter(key,s){ caseState[key].status=s; renderPage(CASES[key].tab); }
+function caseReport(key){ openForm(key,null,CASES[key].prefill()); }
+function caseSearch(key,q){ caseState[key].q=q||""; caseApplySearch(key); }
+function caseApplySearch(key){
+  const q=(caseState[key].q||"").trim().toLowerCase();
+  document.querySelectorAll('[data-case="'+key+'"]').forEach(c=>{ c.style.display=(!q||c.getAttribute("data-text").indexOf(q)>=0)?"":"none"; });
+}
+function caseFocus(key,id){
+  caseState[key].status="all"; caseState[key].q=""; caseState[key].open[id]=true;
+  if(currentTab!==CASES[key].tab) go(CASES[key].tab); else renderPage(CASES[key].tab);
+  setTimeout(function(){ const el=document.getElementById("case_"+id); if(el&&el.scrollIntoView) el.scrollIntoView({block:"center"}); },80);
+}
+pageAfter.lostfound=function(){ caseApplySearch("lostFound"); };
+pageAfter.damage=function(){ caseApplySearch("damage"); };
+
+function caseHero(key){
+  const c=CASES[key];
+  return '<details class="hero upshero"><summary><span class="hero-t">'+esc(c.heroTitle)+'</span><span class="hero-s">'+esc(c.heroSub)+'</span></summary>'
+    +'<div class="steps">'+c.steps.map(s=>'<div class="step"><div class="n"><span>'+esc(s[0])+'</span><span class="htag '+s[3]+'">'+esc(s[1])+'</span></div><div class="d">'+esc(s[2])+'</div></div>').join("")+'</div>'
+    +(key==="damage"?'<div style="margin-top:12px;font-size:11px;color:rgba(234,243,234,.75)">Insurance claims go through Guesty Shield, not Airbnb AirCover.</div>':'')+'</details>';
+}
+function caseCard(key,r){
+  const c=CASES[key]; const st=r.status||c.statuses[0]; const open=!!caseState[key].open[r.id]; const isOpen=caseIsOpen(key,r);
+  const age=caseAge(key,r); const photos=casePhotoCount(r); const nAtt=attachCount(r.attach);
+  const chips=[];
+  chips.push('<span class="chip '+(c.tone[st]||"")+'">'+esc(st)+'</span>');
+  if(isOpen&&!r.suiteop) chips.push('<span class="chip warn">No SuiteOp task</span>');
+  if(key==="damage"&&isOpen&&photos<2) chips.push('<span class="chip alert">Needs '+(2-photos)+' more photo'+((2-photos)===1?"":"s")+'</span>');
+  if(key==="damage"&&caseNeedsClaim(r)) chips.push('<span class="chip warn">Claim needed</span>');
+  if(key==="damage"&&r.needsApproval&&isOpen) chips.push('<span class="chip warn">Isabell approval</span>');
+  if(nAtt) chips.push('<span class="chip">'+nAtt+(nAtt===1?" attachment":" attachments")+'</span>');
+  const dateTxt=caseDate(key,r)?c.dateLabel+" "+upsFmt(caseDate(key,r))+(isOpen&&age!==null&&age>0?" &middot; "+age+" day"+(age===1?"":"s")+" ago":""):"No date";
+  const search=[r.item,caseProp(r),r.guest,r.code,r.notes,r.suiteop,r.status,r.disposition].join(" ").toLowerCase();
+  const header='<div class="resh" onclick="caseToggle(\''+key+'\',\''+r.id+'\')"><span class="caret'+(open?" open":"")+'">&#9656;</span>'
+    +'<div style="flex:1;min-width:150px"><div style="font-weight:600">'+esc(r.item||"Untitled")+'</div><div class="muted" style="font-size:11.5px;margin-top:2px">'+esc(caseProp(r))+' &middot; '+dateTxt+'</div></div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-left:auto">'+chips.join("")+'</div></div>';
+  const statusSel='<div class="upsact" style="align-items:center"><label class="muted" style="font-size:11px">Status</label><select class="inp" style="max-width:260px;flex:1 1 180px" onclick="event.stopPropagation()" onchange="caseSetStatus(\''+key+'\',\''+r.id+'\',this.value)">'
+    +c.statuses.map(s=>'<option'+(s===st?" selected":"")+'>'+esc(s)+'</option>').join("")+'</select>'
+    +'<button class="btn ghost sm" onclick="openForm(\''+key+'\',\''+r.id+'\')">Edit</button></div>';
+  const always='<div class="resb upsq">'+statusSel+'</div>';
+  let more="";
+  if(open){
+    more='<div class="resb" style="border-top:1px dashed var(--line);padding-top:10px">'
+      +upsKV("Property",caseProp(r))+upsKV(c.dateLabel,caseDate(key,r)?upsFmt(caseDate(key,r)):"")
+      +(key==="lostFound"?upsKV("Guest",r.guest)+upsKV("Reservation code",r.code)+upsKV("Found by",r.foundBy)+upsKV("Postage or collection",r.returnMethod):upsKV("Reported by",r.reportedBy)+upsKV("What was done",r.disposition))
+      +upsKV("SuiteOp task",r.suiteop)+upsKV("Notes",r.notes)
+      +(nAtt?'<div style="margin-top:10px">'+attachView(r.attach)+'</div>':'<div class="muted" style="font-size:12px;margin-top:8px">No photos or links yet. Tap Edit to add them.</div>')
+      +'<div class="upsacts"><button class="btn ghost sm" onclick="openForm(\''+key+'\',\''+r.id+'\')">Edit and add photos</button>'
+      +'<button class="btn danger sm" onclick="delRow(\''+key+'\',\''+r.id+'\')">Delete</button></div></div>';
+  }
+  return '<div class="rescard" id="case_'+r.id+'" data-case="'+key+'" data-text="'+esc(search)+'">'+header+always+more+'</div>';
+}
+function caseByProperty(key){
+  const m={}; caseList(key).forEach(r=>{ const k=r.property||""; m[k]=(m[k]||0)+1; });
+  const rows=Object.keys(m).map(k=>({p:k,n:m[k]})).sort((a,b)=>b.n-a.n).slice(0,6);
+  if(!rows.length) return "";
+  return '<div class="card" style="margin-top:16px"><div class="card-hd"><h3>'+(key==="lostFound"?"Where items are being left behind":"Where damage is being reported")+'</h3></div><div class="card-bd">'
+    +rows.map(x=>'<div class="rowline"><div class="grow">'+esc(x.p?propName(x.p):"No property set")+'</div><span class="chip">'+x.n+'</span></div>').join("")
+    +'<div class="note">All time, top 6 properties. This is the count the follow up process is meant to build.</div></div></div>';
+}
+function viewCases(key){
+  const c=CASES[key]; const all=caseList(key); const st=caseState[key];
+  const open=all.filter(r=>caseIsOpen(key,r));
+  const month=todayAU().slice(0,7);
+  const kp=key==="lostFound"
+    ?kpi("Open items",open.length,"not yet returned or closed",true)+kpi("Not yet contacted",open.filter(r=>(r.status||"Found")==="Found").length,"still at Found")+kpi("Returned",all.filter(r=>r.status==="Returned").length,"back with the guest")+kpi("Found this month",all.filter(r=>String(r.created||"").slice(0,7)===month).length,"logged in the hub")
+    :kpi("Open reports",open.length,"not yet resolved",true)+kpi("Missing photos",open.filter(r=>casePhotoCount(r)<2).length,"under 2 photos")+kpi("Claims to submit",open.filter(caseNeedsClaim).length,"flagged, not submitted")+kpi("Need Isabell",open.filter(r=>r.needsApproval).length,"spend or owner commitment");
+  const opts=[["open","Open",r=>caseIsOpen(key,r)]].concat(c.statuses.map(s=>[s,s,r=>(r.status||c.statuses[0])===s])).concat([["all","All",r=>true]]);
+  const cur=opts.some(o=>o[0]===st.status)?st.status:"open";
+  const chipsRow='<div class="upsfilters">'+opts.map(o=>'<button class="filterbtn'+(o[0]===cur?" on":"")+'" onclick="caseFilter(\''+key+'\',\''+String(o[0]).replace(/'/g,"")+'\')">'+esc(o[1])+' <span class="n">'+all.filter(o[2]).length+'</span></button>').join("")+'</div>';
+  const fn=opts.find(o=>o[0]===cur)[2];
+  const rows=all.filter(fn);
+  const openRows=rows.filter(r=>caseIsOpen(key,r)).sort((a,b)=>(caseDate(key,a)||"9999").localeCompare(caseDate(key,b)||"9999"));
+  const doneRows=rows.filter(r=>!caseIsOpen(key,r)).sort((a,b)=>(caseDate(key,b)||"").localeCompare(caseDate(key,a)||""));
+  const cards=openRows.concat(doneRows).map(r=>caseCard(key,r)).join("");
+  const bar='<div class="filterbar"><input class="inp" placeholder="Search item, property or guest" value="'+esc(st.q||"")+'" oninput="caseSearch(\''+key+'\',this.value)" style="flex:1;min-width:140px;max-width:340px" autocomplete="off">'
+    +'<button class="btn" onclick="caseReport(\''+key+'\')">'+esc(c.report)+'</button></div>';
+  const shield=key==="damage"?'<div style="display:flex;margin:0 0 12px"><button class="btn ghost sm" onclick="go(\'shield\')">Open Shield claims</button></div>':"";
+  return head(c.eyebrow,c.title,c.sub)+bar+caseHero(key)+'<div class="upsstats"><div class="kpis">'+kp+'</div></div>'+shield+chipsRow
+    +(cards||'<div class="card"><div class="empty"><h4>'+(all.length?"Nothing here":"Nothing logged yet")+'</h4><p>'+esc(all.length?"No records match this filter.":c.empty)+'</p></div></div>')
+    +caseByProperty(key);
 }
 
 
