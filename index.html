@@ -194,6 +194,14 @@ h1,h2,h3{margin:0}
 .filterbtn.on{background:var(--dgreen);border-color:var(--dgreen);color:#fff}
 .filterbtn.on .n{color:var(--sage)}
 
+/* ---------- property map (leaflet loads its own CSS at runtime; these override it) ---------- */
+.leaflet-marker-icon.ts-pin{background:transparent;border:none}
+.ts-pin-big{filter:drop-shadow(0 2px 5px rgba(0,0,0,.45))}
+.marker-cluster-small,.marker-cluster-small div,.marker-cluster-medium,.marker-cluster-medium div,.marker-cluster-large,.marker-cluster-large div{background-color:rgba(32,79,52,.55)!important}
+.marker-cluster-small div,.marker-cluster-medium div,.marker-cluster-large div{background-color:rgba(32,79,52,.88)!important;color:#fff!important;font-weight:600!important;font-family:var(--mono)}
+.leaflet-popup-content-wrapper{border-radius:var(--r2)!important}
+@media(max-width:1000px){#propMapCanvas{height:420px!important}}
+
 /* ---------- forms ---------- */
 .field{margin-bottom:12px}
 .field label{display:block;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:4px}
@@ -1002,7 +1010,8 @@ function ico(n){ const p={
   sync:'<path d="M4 12a8 8 0 0 1 13-6l3 2M20 12a8 8 0 0 1-13 6l-3-2"/><path d="M20 4v4h-4M4 20v-4h4"/>',
   box:'<path d="M3 8l9-4 9 4-9 4z"/><path d="M3 8v8l9 4 9-4V8"/><path d="M12 12v8"/>',
   shield:'<path d="M12 3l7 3v5c0 4-3 7-7 9-4-2-7-5-7-9V6z"/>',
-  gift:'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v9h14v-9"/><path d="M12 8c-1-3-5-3-5-1s3 1 5 1zM12 8c1-3 5-3 5-1s-3 1-5 1z"/>'
+  gift:'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v9h14v-9"/><path d="M12 8c-1-3-5-3-5-1s3 1 5 1zM12 8c1-3 5-3 5-1s-3 1-5 1z"/>',
+  pin:'<path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/>'
 }; return '<svg viewBox="0 0 24 24">'+(p[n]||"")+'</svg>'; }
 
 const NAV=[
@@ -1029,6 +1038,7 @@ const NAV=[
   ]},
   {grp:"Portfolio", items:[
     {k:"props",label:"Properties",icon:"home",crumb:"Portfolio"},
+    {k:"map",label:"Property map",icon:"pin",crumb:"Portfolio"},
     {k:"pipe",label:"Property acquisition",icon:"funnel",crumb:"Portfolio"},
     {k:"reviews",label:"Reviews",icon:"star",crumb:"Portfolio"},
     {k:"owners",label:"Owners",icon:"people",crumb:"Portfolio"},
@@ -1119,7 +1129,7 @@ function renderPage(k){
   document.getElementById("crumb").textContent=meta.crumb;
   document.getElementById("title").textContent=meta.label;
   setActiveNav(k);
-  const map={myday:viewMyDay,daily:viewDaily,transcript:viewTranscript,coverage:viewCoverage,midstay:viewMidstay,upsells:viewUpsells,lostfound:()=>viewCases("lostFound"),damage:()=>viewCases("damage"),dash:viewDash,tasks:viewTasks,maint:viewMaint,serv:viewServ,props:viewProps,pipe:viewPipe,
+  const map={myday:viewMyDay,daily:viewDaily,transcript:viewTranscript,coverage:viewCoverage,midstay:viewMidstay,upsells:viewUpsells,lostfound:()=>viewCases("lostFound"),damage:()=>viewCases("damage"),dash:viewDash,tasks:viewTasks,maint:viewMaint,serv:viewServ,props:viewProps,map:viewPropMap,pipe:viewPipe,
     sops:()=>viewGeneric("sops"),flows:()=>viewGeneric("workflows"),guest:()=>viewGeneric("guestComms"),
     quick:()=>viewGeneric("quickReplies"),faqs:()=>viewFaqs(),resources:()=>viewGeneric("resources"),
     team:viewTeam,sheets:viewSheets,eod:viewEOD,reviews:viewReviews,notif:viewNotif,owners:viewOwners,revanalytics:viewReviewsAnalysis,balances:viewBalances,groups:viewGroups,linen:viewLinen,consum:viewConsumables,shield:viewShield,edit:viewEdit,contacts:viewContacts};
@@ -2658,6 +2668,307 @@ function cityOf(p){
   const m=a.match(/,\s*([A-Za-z][A-Za-z\s]+?)\s+QLD/); if(m) return m[1].trim();
   const parts=a.split(",").map(s=>s.trim()).filter(Boolean);
   return parts.length>=2?parts[parts.length-2].replace(/\s+QLD.*$/i,"").trim():"";
+}
+
+/* ============================================================
+   PROPERTY MAP
+   Client-side geocoding via the free OpenStreetMap Nominatim API,
+   called straight from the browser - no server, no key. Every
+   address used here comes off the property record itself. A unit
+   with no address of its own borrows one from another Tropical
+   Stays property already tagged to the same building via the
+   "cluster" field - reusing data Marlon already entered, never
+   inventing anything. Anything still unresolved is listed under
+   "needs an address" instead of being pinned at a guess.
+   Coordinates are cached per property id in localStorage
+   (ts_geoCache_v1) so each address is only looked up once, and a
+   dragged pin is saved as a manual override that always wins over
+   a geocoded result.
+   ============================================================ */
+const GEOCACHE_KEY=PFX+"geoCache_v1";
+const CAIRNS_VIEWBOX="144.8,-15.0,146.5,-17.8"; // biases/limits geocoding to Cairns & Far North Queensland
+function geoCache(){ try{ return JSON.parse(localStorage.getItem(GEOCACHE_KEY)||"{}"); }catch(e){ return {}; } }
+function geoCacheSave(c){ try{ localStorage.setItem(GEOCACHE_KEY, JSON.stringify(c)); }catch(e){} }
+function propGeo(id){ return geoCache()[id]||null; }
+function propGeoSet(id,lat,lng,src){ const c=geoCache(); c[id]={lat:lat,lng:lng,src:src||"geocode",ts:nowISO()}; geoCacheSave(c); }
+function propGeoClear(id){ const c=geoCache(); delete c[id]; geoCacheSave(c); }
+function propGeoQuery(p){
+  if(p.address&&p.address.trim()) return p.address.trim();
+  if(p.cluster){ const sib=props().find(x=>x.cluster===p.cluster&&x.address&&x.address.trim()); if(sib) return sib.address.trim(); }
+  return "";
+}
+function propGeoIsFallback(p){ return !(p.address&&p.address.trim()) && !!propGeoQuery(p); }
+
+function loadMapLibs(){
+  if(window._tsMapLibsPromise) return window._tsMapLibsPromise;
+  window._tsMapLibsPromise=new Promise(function(resolve){
+    const addCss=function(href){ if(!document.querySelector('link[href="'+href+'"]')){ const l=document.createElement("link"); l.rel="stylesheet"; l.href=href; document.head.appendChild(l); } };
+    const addJs=function(src){ return new Promise(function(res){ if(document.querySelector('script[src="'+src+'"]')){ res(true); return; } const s=document.createElement("script"); s.src=src; s.onload=function(){res(true);}; s.onerror=function(){res(false);}; document.head.appendChild(s); }); };
+    addCss("https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css");
+    addCss("https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css");
+    addCss("https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css");
+    addJs("https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js").then(function(ok){
+      if(!ok||!window.L){ resolve(false); return; }
+      addJs("https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js").then(function(ok2){
+        resolve(!!(ok2&&window.L&&window.L.markerClusterGroup));
+      });
+    });
+  });
+  return window._tsMapLibsPromise;
+}
+
+function haversineKm(a,b){
+  const R=6371, toRad=function(d){ return d*Math.PI/180; };
+  const dLat=toRad(b.lat-a.lat), dLng=toRad(b.lng-a.lng);
+  const s=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLng/2)*Math.sin(dLng/2);
+  return R*2*Math.asin(Math.sqrt(s));
+}
+function fmtKm(km){ return km<0.05?"Same building":(km<1?Math.round(km*1000)+" m":km.toFixed(km<10?2:1)+" km"); }
+function mapGmapsUrl(p){
+  const g=propGeo(p.id);
+  const q=(p.address&&p.address.trim())?p.address.trim():(g?(g.lat+","+g.lng):"");
+  if(!q) return "";
+  return "https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(q);
+}
+
+let mapФ={base:"",q:"",cluster:""};
+
+function mapGeoStats(){
+  const P=props(); let pinned=0,manual=0,missing=0;
+  P.forEach(function(p){ const g=propGeo(p.id); if(g){ pinned++; if(g.src==="manual")manual++; } else if(!propGeoQuery(p)) missing++; });
+  return {total:P.length,pinned:pinned,manual:manual,missing:missing,pending:P.length-pinned-missing};
+}
+
+function mapClusterColor(p){
+  const c=p.cluster||"";
+  if(c==="Cairns One") return "#204f34";
+  if(c==="Harbour Lights") return "#2e6d8a";
+  if(c==="Lakes Resort") return "#a55d56";
+  if(c) return "#6a4c93";
+  return "#6f8175";
+}
+function mapPinDivIcon(p,opts){
+  opts=opts||{};
+  const col=mapClusterColor(p);
+  const size=opts.big?34:24;
+  const html='<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24"><path d="M12 22s7.5-6.8 7.5-13A7.5 7.5 0 0 0 4.5 9c0 6.2 7.5 13 7.5 13z" fill="'+col+'" stroke="#fff" stroke-width="1"/><circle cx="12" cy="9" r="3" fill="#fff"/></svg>';
+  return L.divIcon({className:"ts-pin"+(opts.big?" ts-pin-big":""),html:html,iconSize:[size,size],iconAnchor:[size/2,size],popupAnchor:[0,-size]});
+}
+
+function mapPopupHTML(p,baseId){
+  const beds=p.bedrooms!=null?p.bedrooms+" bd":""; const bath=p.bathrooms!=null?p.bathrooms+" ba":""; const specs=[beds,bath].filter(Boolean).join(" / ");
+  const g=propGeo(p.id);
+  let distLine="";
+  if(baseId&&baseId!==p.id){
+    const bp=propById(baseId); const bg=bp?propGeo(bp.id):null;
+    if(bg&&g) distLine='<div class="chip info" style="margin-top:6px">'+esc(fmtKm(haversineKm(bg,g)))+' from '+esc(bp.nickname)+'</div>';
+  }
+  const fallbackNote=propGeoIsFallback(p)?'<div class="muted" style="font-size:10.5px;margin-top:4px">No address on this record yet - pinned using '+esc(p.cluster)+"'s address on file</div>":"";
+  const siblings=p.cluster?props().filter(function(x){ return x.cluster===p.cluster&&x.id!==p.id; }):[];
+  const sibLine=siblings.length?'<div class="muted" style="font-size:10.5px;margin-top:4px">'+siblings.length+' other Tropical Stays '+(siblings.length===1?"unit":"units")+' in '+esc(p.cluster)+'</div>':"";
+  const gmaps=mapGmapsUrl(p);
+  return '<div style="min-width:200px;font-family:var(--body)">'
+    +'<div style="font-weight:600;font-size:13px">'+esc(p.nickname)+'</div>'
+    +(p.address?'<div class="muted" style="font-size:11px;margin-top:2px">'+esc(p.address)+'</div>':'')
+    +(specs?'<div class="mono" style="font-size:11px;color:var(--ink2);margin-top:5px">'+esc(specs)+'</div>':'')
+    +distLine+fallbackNote+sibLine
+    +'<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">'
+      +'<button class="btn sm" onclick="openProp(\''+p.id+'\')">Open property</button>'
+      +(gmaps?'<a class="btn ghost sm" href="'+gmaps+'" target="_blank" rel="noopener">Google Maps</a>':'')
+    +'</div>'
+    +'</div>';
+}
+
+function viewPropMap(){
+  const P=props().slice().sort(function(a,b){ return a.nickname.localeCompare(b.nickname); });
+  const clusters=[...new Set(P.map(function(p){ return p.cluster; }).filter(Boolean))].sort();
+  const st=mapGeoStats();
+  const baseOpts='<option value="">Find closest to...</option>'+P.map(function(p){ return '<option value="'+p.id+'" '+(mapФ.base===p.id?"selected":"")+'>'+esc(p.nickname)+(cityOf(p)?" - "+esc(cityOf(p)):"")+'</option>'; }).join("");
+  const sidePanel=mapФ.base?mapClosestPanelHTML(mapФ.base):mapOverviewPanelHTML(P);
+  return head("Portfolio","Property map",
+      "Pins are geocoded from the address already on each property record (via OpenStreetMap), cached in this browser, and can be dragged to correct one. Nothing is invented here: a property with no address yet is listed below instead of being guessed at.")
+    +'<div class="kpis">'
+      +kpi("Properties",st.total,"")
+      +kpi("Pinned",st.pinned,"")
+      +kpi("Manually adjusted",st.manual,"")
+      +kpi("Needs an address",st.missing,"")
+    +'</div>'
+    +'<div class="filterbar">'
+      +'<select class="inp" id="mapBaseSelect" style="max-width:260px" onchange="this.value?mapSelectBase(this.value):mapClearBase()">'+baseOpts+'</select>'
+      +'<span id="mapClearWrap">'+(mapФ.base?'<button class="btn ghost sm" onclick="mapClearBase()">Clear</button>':"")+'</span>'
+      +'<select class="inp" style="max-width:180px" onchange="mapФ.cluster=this.value;renderPage(\'map\')"><option value="">All buildings</option>'+clusters.map(function(c){ return '<option '+(mapФ.cluster===c?"selected":"")+'>'+esc(c)+'</option>'; }).join("")+'</select>'
+      +'<input class="inp" style="max-width:200px" placeholder="Search pins" value="'+esc(mapФ.q)+'" oninput="mapФ.q=this.value;renderPage(\'map\')">'
+      +(st.pending>0?'<button class="btn sm" style="margin-left:auto" onclick="mapGeocodeAll()" id="mapGeoBtn">Pin remaining ('+st.pending+')</button>':'<span class="chip ok" style="margin-left:auto">All addressed properties are pinned</span>')
+    +'</div>'
+    +'<div class="split2">'
+      +'<div class="card"><div id="propMapCanvas" style="height:640px;border-radius:var(--r2)"></div><div id="mapProgress" class="note" style="display:none;margin:10px 12px"></div></div>'
+      +'<div id="mapSidePanel">'+sidePanel+'</div>'
+    +'</div>';
+}
+
+function mapLegendHTML(){
+  const rows=[["Cairns One","#204f34"],["Harbour Lights","#2e6d8a"],["Lakes Resort","#a55d56"],["Other shared building","#6a4c93"],["Standalone","#6f8175"]];
+  return '<div class="card"><div class="card-bd" style="padding:13px 14px">'
+    +'<div class="muted" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Legend</div>'
+    +rows.map(function(r){ return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:5px"><span style="width:10px;height:10px;border-radius:50%;background:'+r[1]+';display:inline-block;flex:none"></span>'+esc(r[0])+'</div>'; }).join("")
+    +'</div></div>';
+}
+
+function mapOverviewPanelHTML(P){
+  const missing=P.filter(function(p){ return !propGeo(p.id)&&!propGeoQuery(p); });
+  const clusterNames=[...new Set(P.map(function(p){ return p.cluster; }).filter(Boolean))].sort();
+  const buildings=clusterNames.map(function(c){ const members=P.filter(function(p){ return p.cluster===c; }); const withAddr=members.find(function(p){ return p.address; }); return {name:c,count:members.length,addr:withAddr?withAddr.address:""}; });
+  return '<div class="note" style="margin-bottom:14px">Click any pin on the map, or pick a property above, to see what\'s closest to it here.</div>'
+    +mapLegendHTML()
+    +'<div class="card" style="margin-top:14px"><div class="card-bd" style="padding:13px 14px">'
+      +'<div class="muted" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Buildings</div>'
+      +(buildings.length?buildings.map(function(b){ return '<div style="padding:6px 0;border-bottom:1px solid var(--line)"><div style="font-weight:600;font-size:12.5px">'+esc(b.name)+'</div><div class="muted" style="font-size:11px">'+b.count+' units'+(b.addr?' - '+esc(b.addr):'')+'</div></div>'; }).join(""):'<div class="muted" style="font-size:12px">No shared buildings tagged yet.</div>')
+    +'</div></div>'
+    +(missing.length?'<div class="card" style="margin-top:14px"><div class="card-bd" style="padding:13px 14px">'
+      +'<div class="muted" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Needs an address ('+missing.length+')</div>'
+      +missing.map(function(p){ return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)"><div class="grow" style="font-size:12.5px">'+esc(p.nickname)+'</div><button class="btn ghost sm" onclick="openForm(\'properties\',\''+p.id+'\')">Add address</button></div>'; }).join("")
+    +'</div></div>':"");
+}
+
+function mapClosestPanelHTML(baseId){
+  const bp=propById(baseId); if(!bp) return mapOverviewPanelHTML(props());
+  const bg=propGeo(baseId);
+  if(!bg) return '<div class="card"><div class="empty"><h4>Not pinned yet</h4><p>'+esc(bp.nickname)+' needs an address on file, or just hasn\'t been geocoded yet. Use "Pin remaining" above, then pick it again.</p></div></div>';
+  const list=props().filter(function(p){ return p.id!==baseId; }).map(function(p){ return {p:p,g:propGeo(p.id)}; }).filter(function(x){ return x.g; })
+    .map(function(x){ return {p:x.p,km:haversineKm(bg,x.g)}; }).sort(function(a,b){ return a.km-b.km; }).slice(0,12);
+  return '<div class="card"><div class="card-bd" style="padding:13px 14px">'
+    +'<div class="muted" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">Closest to</div>'
+    +'<div style="font-weight:600;font-size:13.5px;margin-bottom:10px">'+esc(bp.nickname)+'</div>'
+    +(list.length?list.map(function(x){ const gmaps=mapGmapsUrl(x.p); return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)">'
+        +'<div class="grow clickrow" onclick="mapFlyTo(\''+x.p.id+'\')"><div style="font-size:12.5px;font-weight:500">'+esc(x.p.nickname)+'</div><div class="muted" style="font-size:10.5px">'+esc(cityOf(x.p)||"")+'</div></div>'
+        +(gmaps?'<a href="'+gmaps+'" target="_blank" rel="noopener" title="Open in Google Maps" onclick="event.stopPropagation()" style="color:var(--muted);display:flex;flex:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/></svg></a>':'')
+        +'<span class="chip '+(x.km<0.05?"sage":"")+'">'+esc(fmtKm(x.km))+'</span>'
+      +'</div>'; }).join(""):'<div class="muted" style="font-size:12px">No other pinned properties yet - pin a few more first.</div>')
+    +'</div></div>';
+}
+
+function mapFlyTo(id){
+  const m=window._tsMapMarkers&&window._tsMapMarkers[id];
+  if(!window._tsMap||!m) return;
+  if(window._tsCluster&&window._tsCluster.zoomToShowLayer){ window._tsCluster.zoomToShowLayer(m,function(){ window._tsMap.panTo(m.getLatLng()); m.openPopup(); }); }
+  else { window._tsMap.setView(m.getLatLng(),16); m.openPopup(); }
+}
+
+/* Selecting a base property (by clicking its pin, or from the dropdown) only patches the
+   side panel and redraws the lines on the live map - it never tears down and rebuilds the
+   whole Leaflet instance, so the current pan/zoom is kept. A full renderPage('map') is only
+   needed when the marker SET itself changes (search/building filter, or a fresh geocode run). */
+function mapSelectBase(id){
+  mapФ.base=id;
+  const sel=document.getElementById("mapBaseSelect"); if(sel) sel.value=id;
+  const clearWrap=document.getElementById("mapClearWrap"); if(clearWrap) clearWrap.innerHTML='<button class="btn ghost sm" onclick="mapClearBase()">Clear</button>';
+  const panel=document.getElementById("mapSidePanel"); if(panel) panel.innerHTML=mapClosestPanelHTML(id);
+  mapHighlightBase(id);
+}
+function mapClearBase(){
+  mapФ.base="";
+  const sel=document.getElementById("mapBaseSelect"); if(sel) sel.value="";
+  const clearWrap=document.getElementById("mapClearWrap"); if(clearWrap) clearWrap.innerHTML="";
+  const panel=document.getElementById("mapSidePanel"); if(panel) panel.innerHTML=mapOverviewPanelHTML(props());
+  mapHighlightBase("");
+}
+function mapHighlightBase(id,opts){
+  opts=opts||{};
+  if(!window._tsMap||!window._tsMapMarkers) return;
+  const markers=window._tsMapMarkers;
+  const prev=window._tsMapBaseId;
+  if(prev&&prev!==id&&markers[prev]){ const pp=propById(prev); if(pp){ markers[prev].setIcon(mapPinDivIcon(pp,{big:false})); markers[prev].setZIndexOffset(0); } }
+  if(window._tsCloseLines){ window._tsMap.removeLayer(window._tsCloseLines); window._tsCloseLines=null; }
+  window._tsMapBaseId=id||"";
+  if(!id||!markers[id]) return;
+  const p=propById(id); if(p){ markers[id].setIcon(mapPinDivIcon(p,{big:true})); markers[id].setZIndexOffset(1000); }
+  const bg=propGeo(id); if(!bg) return;
+  const near=props().filter(function(x){ return x.id!==id; }).map(function(x){ return {p:x,g:propGeo(x.id)}; }).filter(function(x){ return x.g; })
+    .map(function(x){ return {p:x.p,g:x.g,km:haversineKm(bg,x.g)}; }).sort(function(a,b){ return a.km-b.km; }).slice(0,8);
+  const grp=L.layerGroup();
+  const lineBounds=[[bg.lat,bg.lng]];
+  near.forEach(function(x){ L.polyline([[bg.lat,bg.lng],[x.g.lat,x.g.lng]],{color:"#a4c598",weight:1.5,opacity:.8,dashArray:"3,5"}).addTo(grp); lineBounds.push([x.g.lat,x.g.lng]); });
+  grp.addTo(window._tsMap);
+  window._tsCloseLines=grp;
+  if(opts.fit!==false){
+    if(window._tsMap.flyToBounds) window._tsMap.flyToBounds(lineBounds,{padding:[50,50],duration:0.6});
+    else window._tsMap.fitBounds(lineBounds,{padding:[50,50]});
+  }
+}
+
+function mapFilteredProps(){
+  const q=(mapФ.q||"").trim().toLowerCase();
+  return props().filter(function(p){
+    if(mapФ.cluster&&p.cluster!==mapФ.cluster) return false;
+    if(q&&(p.nickname+" "+(p.address||"")+" "+(cityOf(p)||"")).toLowerCase().indexOf(q)<0) return false;
+    return true;
+  });
+}
+
+function buildPropMap(){
+  const el=document.getElementById("propMapCanvas"); if(!el||typeof L==="undefined"||!L.markerClusterGroup) return;
+  if(window._tsMap){ try{ window._tsMap.remove(); }catch(e){} window._tsMap=null; }
+  const lmap=L.map(el,{scrollWheelZoom:true});
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"Tiles &copy; Esri &mdash; Esri, HERE, Garmin, USGS, Intermap"}).addTo(lmap);
+  const cluster=L.markerClusterGroup({maxClusterRadius:46});
+  const markers={}; const bounds=[];
+  mapFilteredProps().forEach(function(p){
+    const g=propGeo(p.id); if(!g) return;
+    const isBase=mapФ.base===p.id;
+    const marker=L.marker([g.lat,g.lng],{icon:mapPinDivIcon(p,{big:isBase}),draggable:true,title:p.nickname,zIndexOffset:isBase?1000:0});
+    marker.bindPopup(mapPopupHTML(p,mapФ.base));
+    marker.on("dragend",function(){ const ll=marker.getLatLng(); propGeoSet(p.id,ll.lat,ll.lng,"manual"); toast("Pin adjusted for "+p.nickname); marker.setPopupContent(mapPopupHTML(p,mapФ.base)); });
+    marker.on("click",function(){ mapSelectBase(p.id); });
+    cluster.addLayer(marker);
+    markers[p.id]=marker; bounds.push([g.lat,g.lng]);
+  });
+  lmap.addLayer(cluster);
+  window._tsMap=lmap; window._tsCluster=cluster; window._tsMapMarkers=markers; window._tsMapBaseId="";
+  if(mapФ.base && markers[mapФ.base]){
+    mapHighlightBase(mapФ.base);
+  } else if(bounds.length){
+    lmap.fitBounds(bounds,{padding:[40,40]});
+  } else {
+    lmap.setView([-16.92,145.77],11);
+  }
+}
+
+function initPropMapPage(){
+  const el=document.getElementById("propMapCanvas"); if(!el) return;
+  el.innerHTML='<div class="empty"><h4>Loading map...</h4></div>';
+  loadMapLibs().then(function(ok){
+    const el2=document.getElementById("propMapCanvas"); if(!el2) return;
+    if(!ok){ el2.innerHTML='<div class="empty"><h4>Map library did not load</h4><p>Check the internet connection and reopen this tab.</p></div>'; return; }
+    el2.innerHTML="";
+    buildPropMap();
+  });
+}
+pageAfter.map=initPropMapPage;
+
+let mapGeocodeRunning=false;
+async function mapGeocodeAll(){
+  if(mapGeocodeRunning) return; mapGeocodeRunning=true;
+  const btn=document.getElementById("mapGeoBtn"); if(btn) btn.disabled=true;
+  const prog=document.getElementById("mapProgress"); if(prog) prog.style.display="";
+  const list=props().filter(function(p){ return !propGeo(p.id)&&propGeoQuery(p); });
+  for(let i=0;i<list.length;i++){
+    const p=list[i];
+    if(prog) prog.textContent="Pinning "+(i+1)+" of "+list.length+": "+p.nickname+"...";
+    try{
+      const q=propGeoQuery(p);
+      const url="https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=0&countrycodes=au&viewbox="+CAIRNS_VIEWBOX+"&bounded=1&q="+encodeURIComponent(q);
+      const res=await fetch(url,{headers:{"Accept":"application/json"}});
+      if(res.ok){
+        const data=await res.json();
+        if(data&&data.length) propGeoSet(p.id,parseFloat(data[0].lat),parseFloat(data[0].lon),"geocode");
+      }
+    }catch(e){ /* left unpinned - shows under "needs an address" if it still has none, otherwise retry with the button */ }
+    if(i<list.length-1) await new Promise(function(r){ setTimeout(r,1100); });
+  }
+  mapGeocodeRunning=false;
+  if(prog) prog.style.display="none";
+  toast("Pinning finished.");
+  renderPage("map");
 }
 
 /* ============================================================
